@@ -2,7 +2,9 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
-import 'dart:convert'; // Add this import for JSON encoding
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'firebase_service.dart';
 
 class StorageService {
   // Singleton instance
@@ -39,6 +41,7 @@ class StorageService {
         amount REAL NOT NULL,
         category TEXT NOT NULL,
         date TEXT NOT NULL,
+        account_id TEXT NOT NULL,
         note TEXT,
         created_at TEXT NOT NULL,
         is_synced INTEGER DEFAULT 0,
@@ -85,7 +88,7 @@ class StorageService {
       )
     ''');
 
-    print('🎯 FinFlow Elite Database Created Successfully');
+    debugPrint('🎯 FinFlow Elite Database Created Successfully');
   }
 
   static Future<void> _upgradeDatabase(Database db, int oldVersion, int newVersion) async {
@@ -106,6 +109,7 @@ class StorageService {
       'amount': double.parse(transaction['amount']),
       'category': transaction['category'],
       'date': transaction['date'],
+      'account_id': transaction['accountId'],
       'note': transaction['note'] ?? '',
       'created_at': transaction['createdAt'],
       'is_synced': 0,
@@ -133,6 +137,7 @@ class StorageService {
         'amount': (map['amount'] as double).toString(),
         'category': map['category'] as String,
         'date': map['date'] as String,
+        'accountId': map['account_id'] as String,
         'note': map['note'] as String? ?? '',
         'createdAt': map['created_at'] as String,
         'isLocal': true,
@@ -157,6 +162,7 @@ class StorageService {
         'amount': map['amount'] as double,
         'category': map['category'] as String,
         'date': map['date'] as String,
+        'accountId': map['account_id'] as String,
         'note': map['note'] as String? ?? '',
         'createdAt': map['created_at'] as String,
       };
@@ -430,30 +436,61 @@ class StorageService {
   static Future<void> syncAllLocalData() async {
     await init();
     
-    // Sync transactions
+    if (!await FirebaseService().isConnected) return;
+    
+    debugPrint('🔄 Starting Master Sync...');
+
+    // 1. Sync Transactions
     final unsyncedTransactions = await getUnsyncedTransactions();
-    for (final transaction in unsyncedTransactions) {
-      // This would call FirebaseService to sync each transaction
-      // Implementation depends on how we integrate with FirebaseService
+    for (final t in unsyncedTransactions) {
+      try {
+        await FirebaseService().addTransaction(
+          type: t['type'],
+          amount: t['amount'],
+          category: t['category'],
+          date: DateTime.parse(t['date']),
+          accountId: t['accountId'],
+          note: t['note'],
+          localId: t['id'] as int,
+        );
+      } catch (e) {
+        debugPrint('❌ Transaction sync failed: $e');
+      }
     }
 
-    // Sync reminders
+    // 2. Sync Reminders
     final unsyncedReminders = await getUnsyncedReminders();
-    for (final reminder in unsyncedReminders) {
-      // Sync to Firebase
+    for (final r in unsyncedReminders) {
+      try {
+        await FirebaseService().addReminder(
+          title: r['title'],
+          date: DateTime.parse(r['date']),
+          notes: r['notes'],
+          localId: r['id'] as int,
+        );
+      } catch (e) {
+        debugPrint('❌ Reminder sync failed: $e');
+      }
     }
 
-    // Sync debts
+    // 3. Sync Debts
     final unsyncedDebts = await getUnsyncedDebts();
-    for (final debt in unsyncedDebts) {
-      // Sync to Firebase
+    for (final d in unsyncedDebts) {
+      try {
+        await FirebaseService().addDebt(
+          type: d['debt_type'],
+          person: d['person'],
+          amount: d['amount'],
+          notes: d['notes'],
+          localId: d['id'] as int,
+        );
+      } catch (e) {
+        debugPrint('❌ Debt sync failed: $e');
+      }
     }
 
-    // Process pending operations
-    final pendingOps = await getPendingOperations();
-    for (final operation in pendingOps) {
-      // Process each operation based on type
-    }
+    await saveLastSyncTimestamp();
+    debugPrint('✅ Master Sync Completed');
   }
 
   // ============ SHARED PREFERENCES METHODS ============ //
@@ -553,7 +590,7 @@ class StorageService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
     
-    print('🗑️ All local data cleared');
+    debugPrint('🗑️ All local data cleared');
   }
 
   /// Get database statistics
