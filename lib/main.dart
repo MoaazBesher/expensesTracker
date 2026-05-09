@@ -13,18 +13,11 @@ import 'services/firebase_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'utils/app_theme.dart';
 import 'utils/screen_utils.dart';
+import 'utils/firebase_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: const FirebaseOptions(
-      apiKey: "AIzaSyDJg-mULJuZUbK5Si4-0GLs611b15RYKfQ",
-      appId: "1:1038707025145:web:7f56741b8b7b4c57196e28",
-      messagingSenderId: "1038707025145",
-      projectId: "expenses-tracker-53924",
-      databaseURL: "https://expenses-tracker-53924-default-rtdb.firebaseio.com",
-    ),
-  );
+  await Firebase.initializeApp(options: FirebaseConfig.options);
   runApp(const MyApp());
 }
 

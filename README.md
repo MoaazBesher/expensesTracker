@@ -1,73 +1,78 @@
-# FinFlow Elite: Neural Glassmorphism Expense Tracker
+# Expenses Tracker
 
-FinFlow Elite is a high-performance personal finance management application developed using Flutter and Firebase. It features a sophisticated design system based on "Neural Glassmorphism," offering a premium user experience while maintaining robust data integrity through hybrid cloud-local synchronization.
+A personal finance management application built with Flutter and Firebase. Track income, expenses, accounts, debts, and financial reminders with offline support.
 
-## Desktop and Mobile Interface
-The application implements a responsive design optimized for various form factors, focusing on deep indigo and cyan aesthetics with blurred surface effects.
+## Features
 
-## Core Technical Features
+- **Account Management** -- Track multiple financial sources (cash, credit cards, savings) with real-time net worth calculation.
+- **Income & Expense Logging** -- Categorize and record transactions with an income/expense split view.
+- **Debt Ledger** -- Separate tracking for money owed and money due, with automatic net balance calculation.
+- **Reminders** -- Date-driven notification system for upcoming bills and financial obligations.
+- **Offline Support** -- Local caching ensures full functionality without internet; data syncs to Firebase when connectivity resumes.
+- **Responsive UI** -- Scales across phone sizes using a utility-based responsive system.
 
-### 1. Hybrid Data Persistence
-*   **Cloud Synchronization**: Real-time data streaming and persistence via Firebase Firestore.
-*   **Offline Capability**: Integrated local caching layer to ensure uninterrupted operation in low-connectivity environments.
-*   **Data Integrity**: Implementation of optimistic UI updates with background synchronization logic.
+## Tech Stack
 
-### 2. Advanced Account Management
-*   **Multi-Source Tracking**: Support for diverse financial sources including Cash, Credit/Debit cards (Visa/Mastercard), and Savings accounts.
-*   **Primary Account Logic**: Configurable default account system for streamlined transaction entry.
-*   **Real-time Net Worth**: Consolidated balance calculations across all financial vectors.
+- **Framework**: Flutter (Dart)
+- **Backend**: Firebase (Authentication, Firestore, Realtime Database)
+- **State Management**: StatefulWidget lifecycle + Stream-based reactivity
 
-### 3. Financial Logic & Workflows
-*   **Activity Logging**: Granular income and expense tracking with categorical classification.
-*   **Debt Management**: Specialized ledger for tracking "I Owe" and "Owed to Me" entries with automatic net balance consolidation.
-*   **Reminder Engine**: Date-driven notification system for upcoming financial obligations.
-*   **Analytical Reporting**: Generated monthly summaries with categorical breakdown and net savings analysis.
-
-## Technology Stack
-
-*   **Framework**: Flutter (Dart)
-*   **Backend**: Firebase (Authentication, Firestore)
-*   **State Management**: Optimized Stateful lifecycle management and Stream-based reactivity.
-*   **Theming**: Custom Neural Glassmorphism Design System (Vanilla CSS implementation via Flutter's BoxDecoration).
-
-## Development Setup
+## Getting Started
 
 ### Prerequisites
-*   Flutter SDK (^3.0.0)
-*   Firebase CLI installed and configured
-*   Dart SDK
 
-### Installation Procedure
+- Flutter SDK (3.x)
+- Firebase CLI
+- Dart SDK
 
-1.  **Repository Initialization**:
-    ```bash
-    git clone https://github.com/MoaazBesher/expensesTracker.git
-    cd expensesTracker
-    ```
+### Setup
 
-2.  **Dependency Resolution**:
-    ```bash
-    flutter pub get
-    ```
+```bash
+git clone https://github.com/MoaazBesher/expensesTracker.git
+cd expensesTracker
+flutter pub get
+```
 
-3.  **Firebase Configuration**:
-    *   Initialize a Firebase project via the [Firebase Console](https://console.firebase.google.com/).
-    *   Enable **Authentication** (Google Provider) and **Cloud Firestore**.
-    *   Configure platform-specific files via `flutterfire configure`.
+### Firebase Configuration
 
-4.  **Application Execution**:
-    ```bash
-    flutter run
-    ```
+1. Create a project in the [Firebase Console](https://console.firebase.google.com/).
+2. Enable Google Authentication and Cloud Firestore.
+3. Run `flutterfire configure` to generate platform-specific configs.
+4. Copy `lib/utils/firebase_config.example.dart` to `lib/utils/firebase_config.dart` and fill in your Firebase project credentials.
 
-## Architecture & Security
+### Run
 
-*   **Document Isolation**: Firestore security rules ensure strict per-user data isolation.
-*   **Memory Management**: Efficient use of StreamSubscriptions and controller disposal to prevent memory leaks.
-*   **UI Stability**: Implementation of mounted-state guarding for asynchronous operations within the widget tree.
+```bash
+flutter run
+```
+
+## Project Structure
+
+```
+lib/
+  main.dart                    -- App entry point, navigation, PageView swiping
+  screens/
+    home_screen.dart           -- Dashboard with balance, accounts, recent activity
+    accounts_screen.dart       -- Money sources CRUD
+    transactions_screen.dart   -- Income/expense tabs
+    reminders_screen.dart      -- Financial reminders
+    debts_screen.dart          -- Debt ledger
+    login_screen.dart          -- Google sign-in
+    monthly_bills_screen.dart  -- Monthly report view
+  services/
+    auth_service.dart          -- Firebase Authentication wrapper
+    firebase_service.dart      -- Firestore CRUD operations
+  utils/
+    app_theme.dart             -- Dark theme palette and card styles
+    screen_utils.dart          -- Responsive dimension helper
+    firebase_config.dart       -- Firebase credentials (gitignored)
+    firebase_config.example.dart -- Template for credentials
+```
 
 ## License
-Distributed under the MIT License. See `LICENSE` for more information.
+
+MIT License -- see [LICENSE](LICENSE).
 
 ---
-Developed by [Moaaz Besher](https://github.com/MoaazBesher)
+
+Developed by [Moaaz Besher](https://github.com/MoaazBesher).
