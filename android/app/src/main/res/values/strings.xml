@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_summary_desc">Shows your total balance and monthly summary</string>
+    <string name="widget_actions_desc">Quick buttons to add income, expense, alert, or debt</string>
+    <string name="widget_recent_desc">Shows your last 3 transactions</string>
+    <string name="widget_debts_desc">Summary of what you owe and active alerts</string>
+    <string name="tile_label">Add Expense</string>
+</resources>

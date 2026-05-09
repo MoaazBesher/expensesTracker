@@ -27,6 +27,7 @@ dependencies:
   printing: ^5.10.2
   pdf: ^3.10.2
   path: ^1.9.0
+  home_widget: ^0.7.0
 
 
 dev_dependencies:

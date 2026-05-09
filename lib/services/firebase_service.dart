@@ -96,6 +96,35 @@ class FirebaseService {
         });
   }
 
+  Future<void> updateTransaction({
+    required String transactionId,
+    required String accountId,
+    required String oldType,
+    required double oldAmount,
+    required String newType,
+    required double newAmount,
+    required String category,
+    required DateTime date,
+    required String note,
+  }) async {
+    if (_currentUser == null || !await isConnected) return;
+    // Reverse old balance effect then apply new
+    await _updateAccountBalance(accountId, oldType == 'income' ? -oldAmount : oldAmount);
+    await _firestore
+        .collection('users')
+        .doc(_currentUser)
+        .collection('transactions')
+        .doc(transactionId)
+        .update({
+      'type': newType,
+      'amount': newAmount,
+      'category': category,
+      'date': date.toIso8601String(),
+      'note': note,
+    });
+    await _updateAccountBalance(accountId, newType == 'income' ? newAmount : -newAmount);
+  }
+
   Future<void> deleteTransaction(String transactionId, String accountId, String type, double amount) async {
     if (_currentUser == null) return;
 
@@ -194,6 +223,7 @@ class FirebaseService {
 
   Future<void> _updateAccountBalance(String accountId, double amountChange) async {
     if (_currentUser == null) return;
+    if (accountId.isEmpty) return; // Skip if no account linked
     
     final docRef = _firestore.collection('users').doc(_currentUser).collection('accounts').doc(accountId);
     
@@ -240,6 +270,21 @@ class FirebaseService {
           d['id'] = doc.id;
           return d;
         }).toList());
+  }
+
+  Future<void> updateReminder({
+    required String reminderId,
+    required String title,
+    required DateTime date,
+    required String notes,
+  }) async {
+    if (_currentUser == null || !await isConnected) return;
+    await _firestore
+        .collection('users')
+        .doc(_currentUser)
+        .collection('reminders')
+        .doc(reminderId)
+        .update({'title': title, 'date': date.toIso8601String(), 'notes': notes});
   }
 
   Future<void> deleteReminder(String reminderId) async {

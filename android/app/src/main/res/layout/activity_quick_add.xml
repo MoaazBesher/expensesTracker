@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#1C2128"
+    android:padding="24dp">
+
+    <!-- Title -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="⚡ Quick Add"
+        android:textColor="#F0F6FC"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Type Toggle -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="14dp"
+        android:background="#0D1117"
+        android:padding="4dp">
+
+        <Button
+            android:id="@+id/btn_expense"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="Expense"
+            android:textSize="13sp"
+            android:textColor="#F85149"
+            android:backgroundTint="#F8514920"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/btn_income"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="Income"
+            android:textSize="13sp"
+            android:textColor="#8B949E"
+            android:backgroundTint="#0D1117"
+            android:layout_marginStart="4dp" />
+    </LinearLayout>
+
+    <!-- Amount -->
+    <EditText
+        android:id="@+id/edit_amount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Amount"
+        android:textColor="#F0F6FC"
+        android:textColorHint="#8B949E"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:inputType="numberDecimal"
+        android:background="#0D1117"
+        android:padding="14dp"
+        android:layout_marginBottom="10dp" />
+
+    <!-- Category Spinner -->
+    <Spinner
+        android:id="@+id/spinner_category"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="#0D1117"
+        android:padding="10dp"
+        android:popupBackground="#1C2128"
+        android:layout_marginBottom="10dp" />
+
+    <!-- Note -->
+    <EditText
+        android:id="@+id/edit_note"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Note (optional)"
+        android:textColor="#F0F6FC"
+        android:textColorHint="#8B949E"
+        android:textSize="13sp"
+        android:inputType="text"
+        android:background="#0D1117"
+        android:padding="14dp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_cancel"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_weight="1"
+            android:text="Cancel"
+            android:textColor="#8B949E"
+            android:backgroundTint="#30363D"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btn_save"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_weight="2"
+            android:text="Save"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:backgroundTint="#F85149" />
+    </LinearLayout>
+</LinearLayout>

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../services/firebase_service.dart';
 import '../services/storage_service.dart';
-
+import '../utils/app_theme.dart';
+import '../utils/screen_utils.dart';
+import 'package:intl/intl.dart';
 
 class MonthlyBillsScreen extends StatefulWidget {
   const MonthlyBillsScreen({super.key});
@@ -15,37 +17,33 @@ class _MonthlyBillsScreenState extends State<MonthlyBillsScreen> {
   List<Map<String, dynamic>> _transactions = [];
   List<Map<String, dynamic>> _filteredTransactions = [];
   bool _isLoading = true;
-  
+
   // Filters
   String _searchQuery = '';
   String _selectedType = 'all';
-  String _selectedCategory = 'all';
-  double _minAmount = 0.0;
-  double _maxAmount = 10000.0;
-  
+
   // Summary data
   double _totalIncome = 0.0;
   double _totalExpenses = 0.0;
   double _netSavings = 0.0;
-  
-  // Form controllers
+
   final TextEditingController _searchController = TextEditingController();
-  final TextEditingController _minAmountController = TextEditingController();
-  final TextEditingController _maxAmountController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadMonthlyData();
-    _minAmountController.text = _minAmount.toStringAsFixed(2);
-    _maxAmountController.text = _maxAmount.toStringAsFixed(2);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _loadMonthlyData() async {
     if (!mounted) return;
-    
     setState(() => _isLoading = true);
-    
     try {
       FirebaseService().getMonthlyTransactions(_selectedMonth).listen((transactions) {
         if (mounted) {
@@ -58,7 +56,6 @@ class _MonthlyBillsScreenState extends State<MonthlyBillsScreen> {
         }
       });
     } catch (e) {
-      debugPrint('Online load failed: $e');
       final localTransactions = await StorageService.getLocalTransactions(_selectedMonth);
       if (mounted) {
         setState(() {
@@ -74,130 +71,34 @@ class _MonthlyBillsScreenState extends State<MonthlyBillsScreen> {
   void _calculateSummary() {
     double income = 0.0;
     double expenses = 0.0;
-
-    for (final transaction in _transactions) {
-      final amount = _safeConvertAmount(transaction['amount']);
-      final type = transaction['type']?.toString() ?? 'expense';
-
-      if (type == 'income') {
-        income += amount;
-      } else {
-        expenses += amount;
-      }
+    for (final t in _transactions) {
+      final amount = _safeAmount(t['amount']);
+      if (t['type'] == 'income') { income += amount; } else { expenses += amount; }
     }
-
-    setState(() {
-      _totalIncome = income;
-      _totalExpenses = expenses;
-      _netSavings = income - expenses;
-    });
+    _totalIncome = income;
+    _totalExpenses = expenses;
+    _netSavings = income - expenses;
   }
 
   void _applyFilters() {
     if (!mounted) return;
-    
     setState(() {
-      _filteredTransactions = _transactions.where((transaction) {
-        final matchesSearch = _searchQuery.isEmpty || 
-            transaction['category'].toString().toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            (transaction['note']?.toString().toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
-        
-        final matchesType = _selectedType == 'all' || 
-            transaction['type'] == _selectedType;
-        
-        final amount = _safeConvertAmount(transaction['amount']);
-        final matchesAmount = amount >= _minAmount && amount <= _maxAmount;
-        
-        final matchesCategory = _selectedCategory == 'all' || 
-            transaction['category']?.toString() == _selectedCategory;
-        
-        return matchesSearch && matchesType && matchesAmount && matchesCategory;
+      _filteredTransactions = _transactions.where((t) {
+        final matchesSearch = _searchQuery.isEmpty ||
+            t['category'].toString().toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            (t['note']?.toString().toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
+        final matchesType = _selectedType == 'all' || t['type'] == _selectedType;
+        return matchesSearch && matchesType;
       }).toList()
-      ..sort((a, b) {
-        final dateA = DateTime.parse(a['date'] ?? DateTime.now().toIso8601String());
-        final dateB = DateTime.parse(b['date'] ?? DateTime.now().toIso8601String());
-        return dateB.compareTo(dateA);
-      });
+        ..sort((a, b) {
+          final da = DateTime.parse(a['date'] ?? DateTime.now().toIso8601String());
+          final db = DateTime.parse(b['date'] ?? DateTime.now().toIso8601String());
+          return db.compareTo(da);
+        });
     });
   }
 
-  void _showFilterDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            backgroundColor: const Color(0xFF1E293B),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: const Text('Filter Transactions', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildFilterSection('Type', DropdownButton<String>(
-                    value: _selectedType,
-                    isExpanded: true,
-                    dropdownColor: const Color(0xFF1E293B),
-                    onChanged: (v) => setState(() => _selectedType = v!),
-                    items: ['all', 'income', 'expense'].map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
-                  )),
-                  const SizedBox(height: 16),
-                  _buildFilterSection('Amount Range', Row(
-                    children: [
-                      Expanded(child: TextField(
-                        controller: _minAmountController,
-                        decoration: const InputDecoration(labelText: 'Min'),
-                        keyboardType: TextInputType.number,
-                        onChanged: (v) => setState(() => _minAmount = double.tryParse(v) ?? 0.0),
-                      )),
-                      const SizedBox(width: 12),
-                      Expanded(child: TextField(
-                        controller: _maxAmountController,
-                        decoration: const InputDecoration(labelText: 'Max'),
-                        keyboardType: TextInputType.number,
-                        onChanged: (v) => setState(() => _maxAmount = double.tryParse(v) ?? 10000.0),
-                      )),
-                    ],
-                  )),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(onPressed: () { _resetFilters(); Navigator.pop(context); }, child: const Text('Reset', style: TextStyle(color: Colors.red))),
-              TextButton(onPressed: () { _applyFilters(); Navigator.pop(context); }, child: const Text('Apply')),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildFilterSection(String title, Widget child) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: const TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        child,
-      ],
-    );
-  }
-
-  void _resetFilters() {
-    setState(() {
-      _searchQuery = '';
-      _selectedType = 'all';
-      _selectedCategory = 'all';
-      _minAmount = 0.0;
-      _maxAmount = 10000.0;
-      _searchController.clear();
-      _minAmountController.text = '0.00';
-      _maxAmountController.text = '10000.00';
-    });
-    _applyFilters();
-  }
-
-  double _safeConvertAmount(dynamic v) {
+  double _safeAmount(dynamic v) {
     if (v == null) return 0.0;
     if (v is num) return v.toDouble();
     if (v is String) return double.tryParse(v) ?? 0.0;
@@ -206,114 +107,251 @@ class _MonthlyBillsScreenState extends State<MonthlyBillsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    S.init(context);
+    final monthLabel = DateFormat('MMMM yyyy').format(_selectedMonth);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
-      appBar: AppBar(
-        title: const Text('Financial Report'),
-        backgroundColor: const Color(0xFF1E293B),
-      ),
+      backgroundColor: Colors.transparent,
       body: Column(
         children: [
-          _buildSummaryCards(),
-          _buildFilterBar(),
-          _buildActiveFilters(),
-          Expanded(
-            child: _isLoading 
-                ? const Center(child: CircularProgressIndicator())
-                : _filteredTransactions.isEmpty 
-                    ? _buildEmptyState()
-                    : _buildTransactionsList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryCards() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          _buildSummaryCard('Income', _totalIncome, Colors.green),
-          const SizedBox(width: 8),
-          _buildSummaryCard('Expenses', _totalExpenses, Colors.red),
-          const SizedBox(width: 8),
-          _buildSummaryCard('Savings', _netSavings, Colors.amber),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryCard(String title, double value, Color color) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: const Color(0xFF1E293B), borderRadius: BorderRadius.circular(12)),
-        child: Column(
-          children: [
-            Text(title, style: const TextStyle(color: Colors.grey, fontSize: 10)),
-            Text('\$${value.toStringAsFixed(0)}', style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 14)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _searchController,
-              onChanged: (v) { setState(() => _searchQuery = v); _applyFilters(); },
-              decoration: const InputDecoration(hintText: 'Search...', prefixIcon: Icon(Icons.search)),
+          // ── Month banner + summary cards ──────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Month label
+                Row(
+                  children: [
+                    const Icon(Icons.calendar_month_rounded, size: 16, color: AppTheme.textDim),
+                    const SizedBox(width: 6),
+                    Text(monthLabel, style: const TextStyle(color: AppTheme.textDim, fontSize: 13, fontWeight: FontWeight.w500)),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                // Summary row
+                Row(
+                  children: [
+                    Expanded(child: _buildSummaryCard('Income', _totalIncome, AppTheme.income, Icons.trending_up_rounded)),
+                    const SizedBox(width: 10),
+                    Expanded(child: _buildSummaryCard('Expenses', _totalExpenses, AppTheme.expense, Icons.trending_down_rounded)),
+                    const SizedBox(width: 10),
+                    Expanded(child: _buildSummaryCard('Saved', _netSavings, AppTheme.primary, Icons.savings_rounded)),
+                  ],
+                ),
+              ],
             ),
           ),
-          IconButton(icon: const Icon(Icons.filter_list, color: Colors.indigoAccent), onPressed: _showFilterDialog),
+
+          // ── Search + Type Filter ──────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    height: 44,
+                    decoration: AppTheme.cardDecoration(radius: 12),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (v) { setState(() => _searchQuery = v); _applyFilters(); },
+                      decoration: const InputDecoration(
+                        hintText: 'Search transactions...',
+                        border: InputBorder.none,
+                        prefixIcon: Icon(Icons.search_rounded, color: AppTheme.textDim, size: 18),
+                        contentPadding: EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      style: const TextStyle(color: AppTheme.textMain, fontSize: 13),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                // Type filter pill
+                Container(
+                  height: 44,
+                  decoration: AppTheme.cardDecoration(radius: 12),
+                  child: PopupMenuButton<String>(
+                    onSelected: (v) { setState(() => _selectedType = v); _applyFilters(); },
+                    icon: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(width: 8),
+                        Icon(Icons.tune_rounded, color: _selectedType != 'all' ? AppTheme.primary : AppTheme.textDim, size: 18),
+                        const SizedBox(width: 4),
+                      ],
+                    ),
+                    padding: EdgeInsets.zero,
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(value: 'all',     child: Text('All')),
+                      const PopupMenuItem(value: 'income',  child: Text('Income')),
+                      const PopupMenuItem(value: 'expense', child: Text('Expense')),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // ── Type filter pills row ─────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+            child: Row(
+              children: ['All', 'Income', 'Expense'].map((label) {
+                final value = label.toLowerCase();
+                final isActive = _selectedType == value;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: GestureDetector(
+                    onTap: () { setState(() => _selectedType = value); _applyFilters(); },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isActive ? AppTheme.primary.withValues(alpha: 0.15) : Colors.transparent,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isActive ? AppTheme.primary.withValues(alpha: 0.4) : AppTheme.border,
+                        ),
+                      ),
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          color: isActive ? AppTheme.primary : AppTheme.textDim,
+                          fontSize: 12,
+                          fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // ── Transactions list ─────────────────────────────────────────
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator(color: AppTheme.primary, strokeWidth: 2))
+                : _filteredTransactions.isEmpty
+                    ? _buildEmptyState()
+                    : RefreshIndicator(
+                        onRefresh: () async => _loadMonthlyData(),
+                        color: AppTheme.primary,
+                        backgroundColor: AppTheme.surface,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                          itemCount: _filteredTransactions.length,
+                          itemBuilder: (context, index) => _buildTransactionItem(_filteredTransactions[index]),
+                        ),
+                      ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildActiveFilters() {
-    final filters = <String>[];
-    if (_selectedType != 'all') filters.add(_selectedType);
-    if (_searchQuery.isNotEmpty) filters.add('Search');
-    
-    if (filters.isEmpty) return const SizedBox();
-    
+  Widget _buildSummaryCard(String title, double amount, Color color, IconData icon) {
+    final isNegative = amount < 0;
     return Container(
-      height: 40,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        children: filters.map((f) => Chip(label: Text(f))).toList(),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: AppTheme.cardDecoration(radius: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 15, color: color),
+          const SizedBox(height: 6),
+          Text(title, style: const TextStyle(color: AppTheme.textDim, fontSize: 10, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 2),
+          Text(
+            '\$${amount.abs().toStringAsFixed(0)}',
+            style: TextStyle(
+              color: isNegative ? AppTheme.expense : color,
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildTransactionsList() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _filteredTransactions.length,
-      itemBuilder: (context, index) {
-        final t = _filteredTransactions[index];
-        final isIncome = t['type'] == 'income';
-        final amt = _safeConvertAmount(t['amount']);
-        return Card(
-          color: const Color(0xFF1E293B),
-          child: ListTile(
-            leading: Icon(isIncome ? Icons.arrow_upward : Icons.arrow_downward, color: isIncome ? Colors.green : Colors.red),
-            title: Text(t['category'] ?? 'General', style: const TextStyle(color: Colors.white)),
-            subtitle: Text(t['note'] ?? '', style: const TextStyle(color: Colors.grey)),
-            trailing: Text('\$${amt.toStringAsFixed(0)}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+  Widget _buildTransactionItem(Map<String, dynamic> t) {
+    final isIncome = t['type'] == 'income';
+    final amount = _safeAmount(t['amount']);
+    final color = isIncome ? AppTheme.income : AppTheme.expense;
+    final date = t['date'] != null ? DateFormat('MMM dd').format(DateTime.parse(t['date'])) : '';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: AppTheme.cardDecoration(radius: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              isIncome ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+              color: color,
+              size: 18,
+            ),
           ),
-        );
-      },
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  t['category'] ?? 'General',
+                  style: const TextStyle(color: AppTheme.textMain, fontWeight: FontWeight.w600, fontSize: 13),
+                ),
+                if (t['note'] != null && t['note'].toString().isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    t['note'].toString(),
+                    style: const TextStyle(color: AppTheme.textDim, fontSize: 11),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${isIncome ? '+' : '-'}\$${amount.toStringAsFixed(0)}',
+                style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 14),
+              ),
+              const SizedBox(height: 2),
+              Text(date, style: const TextStyle(color: AppTheme.textDim, fontSize: 11)),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildEmptyState() => const Center(child: Text('No results found', style: TextStyle(color: Colors.grey)));
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.receipt_long_outlined, size: 44, color: AppTheme.textDim.withValues(alpha: 0.25)),
+          const SizedBox(height: 12),
+          const Text('No transactions found', style: TextStyle(color: AppTheme.textMain, fontSize: 14, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 4),
+          const Text('Try adjusting your filters', style: TextStyle(color: AppTheme.textDim, fontSize: 12)),
+        ],
+      ),
+    );
+  }
 }
