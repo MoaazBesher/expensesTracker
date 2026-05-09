@@ -3,11 +3,11 @@ import '../services/firebase_service.dart';
 import '../services/storage_service.dart';
 import '../models/account_model.dart';
 import '../utils/app_theme.dart';
+import '../utils/screen_utils.dart';
 import 'package:intl/intl.dart';
 
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});
-
   @override
   State<TransactionsScreen> createState() => _TransactionsScreenState();
 }
@@ -33,52 +33,29 @@ class _TransactionsScreenState extends State<TransactionsScreen> with SingleTick
 
   void _loadAccounts() {
     FirebaseService().getAccounts().listen((accounts) {
-      if (mounted) {
-        setState(() {
-          _accounts = accounts;
-          if (_accounts.isNotEmpty && _selectedAccount == null) {
-            _selectedAccount = _accounts.first;
-          }
-        });
-      }
+      if (mounted) setState(() { _accounts = accounts; if (_accounts.isNotEmpty && _selectedAccount == null) _selectedAccount = _accounts.first; });
     });
   }
 
   void _loadTransactions() async {
     setState(() => _isLoading = true);
-    
     try {
-      FirebaseService().getMonthlyTransactions(_currentMonth).listen((transactions) {
-        if (mounted) {
-          setState(() {
-            _transactions = transactions;
-            _filterTransactions();
-            _isLoading = false;
-          });
-        }
+      FirebaseService().getMonthlyTransactions(_currentMonth).listen((txns) {
+        if (mounted) setState(() { _transactions = txns; _filterTransactions(); _isLoading = false; });
       });
     } catch (e) {
-      final localTransactions = await StorageService.getLocalTransactions(_currentMonth);
-      if (mounted) {
-        setState(() {
-          _transactions = localTransactions;
-          _filterTransactions();
-          _isLoading = false;
-        });
-      }
+      final txns = await StorageService.getLocalTransactions(_currentMonth);
+      if (mounted) setState(() { _transactions = txns; _filterTransactions(); _isLoading = false; });
     }
   }
 
   void _filterTransactions() {
     setState(() {
-      _filteredTransactions = _transactions.where((transaction) {
-        final matchesSearch = _searchQuery.isEmpty || 
-            transaction['category'].toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            (transaction['note']?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
-        
-        final matchesType = _selectedType == 'all' || 
-            transaction['type'] == _selectedType;
-        
+      _filteredTransactions = _transactions.where((t) {
+        final matchesSearch = _searchQuery.isEmpty ||
+            t['category'].toString().toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            (t['note']?.toString().toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
+        final matchesType = _selectedType == 'all' || t['type'] == _selectedType;
         return matchesSearch && matchesType;
       }).toList();
     });
@@ -100,76 +77,35 @@ class _TransactionsScreenState extends State<TransactionsScreen> with SingleTick
 
   void _saveTransaction(double amount, String category, String accountId, String note) async {
     final bool isIncome = _tabController.index == 0;
-    
     try {
       await FirebaseService().addTransaction(
-        type: isIncome ? 'income' : 'expense',
-        amount: amount,
-        category: category,
-        date: DateTime.now(),
-        accountId: accountId,
-        note: note,
+        type: isIncome ? 'income' : 'expense', amount: amount, category: category,
+        date: DateTime.now(), accountId: accountId, note: note,
       );
-
       await StorageService.saveLocalTransaction({
-        'type': isIncome ? 'income' : 'expense',
-        'amount': amount.toString(),
-        'category': category,
-        'date': DateTime.now().toIso8601String(),
-        'accountId': accountId,
-        'note': note,
+        'type': isIncome ? 'income' : 'expense', 'amount': amount.toString(), 'category': category,
+        'date': DateTime.now().toIso8601String(), 'accountId': accountId, 'note': note,
         'createdAt': DateTime.now().toIso8601String(),
       });
-
-      if (mounted) {
-        Navigator.pop(context);
-        _showSuccess('${isIncome ? 'Income' : 'Expense'} added successfully!');
-        _loadTransactions();
-      }
-
-    } catch (e) {
-      if (mounted) {
-        _showError('Failed to add transaction: $e');
-      }
-    }
-  }
-  
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message, style: const TextStyle(fontSize: 12)),
-        backgroundColor: AppTheme.accent,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
+      if (mounted) { Navigator.pop(context); _showSuccess('${isIncome ? 'Income' : 'Expense'} added'); _loadTransactions(); }
+    } catch (e) { if (mounted) _showError('Failed: $e'); }
   }
 
-  void _showSuccess(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message, style: const TextStyle(fontSize: 12)),
-        backgroundColor: AppTheme.income,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
+  void _showError(String msg) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg, style: const TextStyle(fontSize: 12)), backgroundColor: AppTheme.accent));
+  void _showSuccess(String msg) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg, style: const TextStyle(fontSize: 12)), backgroundColor: AppTheme.secondary));
 
   @override
   Widget build(BuildContext context) {
+    S.init(context);
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Activity Log'),
+        toolbarHeight: 0,
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: AppTheme.primary,
           labelColor: AppTheme.primary,
           unselectedLabelColor: AppTheme.textDim,
-          indicatorSize: TabBarIndicatorSize.label,
           tabs: const [
             Tab(text: 'Income'),
             Tab(text: 'Expenses'),
@@ -183,59 +119,45 @@ class _TransactionsScreenState extends State<TransactionsScreen> with SingleTick
           _buildTransactionsContent('expense'),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: _showAddMenu,
         backgroundColor: AppTheme.primary,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Add Item', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 
   Widget _buildTransactionsContent(String type) {
     final filtered = _filteredTransactions.where((t) => t['type'] == type).toList();
-    
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(S.sectionPadding),
           child: Row(
             children: [
               Expanded(
                 child: Container(
-                  height: 48,
-                  decoration: AppTheme.glassDecoration(opacity: 0.05),
+                  height: 42,
+                  decoration: AppTheme.cardDecoration(radius: 10),
                   child: TextField(
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value;
-                        _filterTransactions();
-                      });
-                    },
+                    onChanged: (v) { setState(() { _searchQuery = v; _filterTransactions(); }); },
                     decoration: const InputDecoration(
-                      hintText: 'Search operations...',
-                      hintStyle: TextStyle(color: AppTheme.textDark, fontSize: 14),
+                      hintText: 'Search...',
                       border: InputBorder.none,
-                      prefixIcon: Icon(Icons.search_rounded, color: AppTheme.textDim, size: 20),
-                      contentPadding: EdgeInsets.symmetric(vertical: 12),
+                      prefixIcon: Icon(Icons.search_rounded, color: AppTheme.textDim, size: 18),
+                      contentPadding: EdgeInsets.symmetric(vertical: 10),
                     ),
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    style: const TextStyle(color: AppTheme.textMain, fontSize: 13),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Container(
-                height: 48,
-                width: 48,
-                decoration: AppTheme.glassDecoration(opacity: 0.05),
+                height: 42, width: 42,
+                decoration: AppTheme.cardDecoration(radius: 10),
                 child: PopupMenuButton<String>(
-                  onSelected: (value) {
-                    setState(() {
-                      _selectedType = value;
-                      _filterTransactions();
-                    });
-                  },
-                  icon: const Icon(Icons.tune_rounded, color: AppTheme.primary, size: 20),
+                  onSelected: (v) { setState(() { _selectedType = v; _filterTransactions(); }); },
+                  icon: const Icon(Icons.tune_rounded, color: AppTheme.primary, size: 18),
                   padding: EdgeInsets.zero,
                   itemBuilder: (context) => [
                     const PopupMenuItem(value: 'all', child: Text('All')),
@@ -247,17 +169,16 @@ class _TransactionsScreenState extends State<TransactionsScreen> with SingleTick
             ],
           ),
         ),
-        
         Expanded(
-          child: _isLoading 
+          child: _isLoading
               ? const Center(child: CircularProgressIndicator(color: AppTheme.primary))
-              : filtered.isEmpty 
-                  ? _buildEmptyState(type)
+              : filtered.isEmpty
+                  ? _buildEmptyState()
                   : RefreshIndicator(
                       onRefresh: () async => _loadTransactions(),
                       color: AppTheme.primary,
                       child: ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        padding: EdgeInsets.symmetric(horizontal: S.sectionPadding),
                         itemCount: filtered.length,
                         itemBuilder: (context, index) => _buildTransactionItem(filtered[index]),
                       ),
@@ -270,39 +191,37 @@ class _TransactionsScreenState extends State<TransactionsScreen> with SingleTick
   Widget _buildTransactionItem(Map<String, dynamic> t) {
     final isIncome = t['type'] == 'income';
     final amount = _safeConvertAmount(t['amount']);
-    final date = DateTime.parse(t['date']);
-    
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: AppTheme.glassDecoration(opacity: 0.03, radius: 16),
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: AppTheme.cardDecoration(radius: 12),
       child: ListTile(
         contentPadding: const EdgeInsets.all(12),
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             color: (isIncome ? AppTheme.income : AppTheme.expense).withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(isIncome ? Icons.arrow_upward : Icons.arrow_downward, 
-                    color: isIncome ? AppTheme.income : AppTheme.expense, size: 20),
+          child: Icon(isIncome ? Icons.arrow_upward : Icons.arrow_downward, color: isIncome ? AppTheme.income : AppTheme.expense, size: 18),
         ),
-        title: Text(t['category'] ?? 'General', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        subtitle: Text(DateFormat('MMM dd, yyyy').format(date), style: const TextStyle(color: AppTheme.textDim, fontSize: 12)),
-        trailing: Text('${isIncome ? '+' : '-'}\$${amount.toStringAsFixed(0)}', 
-                     style: TextStyle(color: isIncome ? AppTheme.income : AppTheme.expense, fontWeight: FontWeight.bold, fontSize: 16)),
+        title: Text(t['category'] ?? 'General', style: const TextStyle(color: AppTheme.textMain, fontWeight: FontWeight.w600, fontSize: 14)),
+        subtitle: t['date'] != null
+            ? Text(DateFormat('MMM dd, yyyy').format(DateTime.parse(t['date'])), style: TextStyle(color: AppTheme.textDim, fontSize: 11))
+            : null,
+        trailing: Text('${isIncome ? '+' : '-'}\$${amount.toStringAsFixed(0)}', style: TextStyle(color: isIncome ? AppTheme.income : AppTheme.expense, fontWeight: FontWeight.w600, fontSize: 15)),
         onLongPress: () => _confirmDelete(t),
       ),
     );
   }
 
-  Widget _buildEmptyState(String type) {
+  Widget _buildEmptyState() {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.receipt_long_outlined, size: 64, color: AppTheme.textDim.withValues(alpha: 0.2)),
-          const SizedBox(height: 16),
-          Text('No transactions yet', style: TextStyle(color: AppTheme.textDim, fontSize: 16)),
+          Icon(Icons.receipt_long_outlined, size: 48, color: AppTheme.textDim.withValues(alpha: 0.2)),
+          const SizedBox(height: 12),
+          Text('No transactions yet', style: TextStyle(color: AppTheme.textDim, fontSize: S.fontBody)),
         ],
       ),
     );
@@ -313,13 +232,17 @@ class _TransactionsScreenState extends State<TransactionsScreen> with SingleTick
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: AppTheme.glassDecoration(color: AppTheme.surfaceLight, opacity: 1),
-        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+          border: Border(top: BorderSide(color: AppTheme.border)),
+        ),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('New Entry', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 32),
+            const Text('New Entry', style: TextStyle(color: AppTheme.textMain, fontSize: 18, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -327,7 +250,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> with SingleTick
                 _buildAddOption('Expense', Icons.bar_chart_rounded, AppTheme.expense, false),
               ],
             ),
-            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -336,19 +258,16 @@ class _TransactionsScreenState extends State<TransactionsScreen> with SingleTick
 
   Widget _buildAddOption(String label, IconData icon, Color color, bool isIncome) {
     return InkWell(
-      onTap: () {
-        Navigator.pop(context);
-        _showAddTransactionSheet(isIncome);
-      },
+      onTap: () { Navigator.pop(context); _showAddTransactionSheet(isIncome); },
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
-            child: Icon(icon, color: color, size: 32),
+            child: Icon(icon, color: color, size: 28),
           ),
-          const SizedBox(height: 12),
-          Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          Text(label, style: const TextStyle(color: AppTheme.textMain, fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -358,9 +277,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> with SingleTick
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.surfaceLight,
-        title: const Text('Delete Transaction?'),
-        content: const Text('This action cannot be undone.'),
+        backgroundColor: AppTheme.surface,
+        title: const Text('Delete Transaction?', style: TextStyle(fontSize: 16)),
+        content: const Text('This cannot be undone.', style: TextStyle(fontSize: 13)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           TextButton(
@@ -368,7 +287,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> with SingleTick
               Navigator.pop(context);
               await FirebaseService().deleteTransaction(t['id'], t['accountId'] ?? '', t['type'], _safeConvertAmount(t['amount']));
               _loadTransactions();
-            }, 
+            },
             child: const Text('Delete', style: TextStyle(color: AppTheme.accent))),
         ],
       ),
@@ -389,14 +308,7 @@ class _AddTransactionSheet extends StatefulWidget {
   final List<AccountModel> accounts;
   final AccountModel? defaultAccount;
   final Function(double, String, String, String) onSave;
-
-  const _AddTransactionSheet({
-    required this.isIncome,
-    required this.accounts,
-    this.defaultAccount,
-    required this.onSave,
-  });
-
+  const _AddTransactionSheet({required this.isIncome, required this.accounts, this.defaultAccount, required this.onSave});
   @override
   State<_AddTransactionSheet> createState() => _AddTransactionSheetState();
 }
@@ -421,67 +333,64 @@ class _AddTransactionSheetState extends State<_AddTransactionSheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: AppTheme.glassDecoration(color: AppTheme.surfaceLight, opacity: 1),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+        border: Border(top: BorderSide(color: AppTheme.border)),
+      ),
       padding: EdgeInsets.only(left: 24, right: 24, top: 24, bottom: MediaQuery.of(context).viewInsets.bottom + 24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('Add ${widget.isIncome ? 'Income' : 'Expense'}', 
-               style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 24),
-          TextField(
-            controller: _amountController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(
-              labelText: 'Amount',
-              prefixText: '\$ ',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Add ${widget.isIncome ? 'Income' : 'Expense'}', style: const TextStyle(color: AppTheme.textMain, fontSize: 18, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 20),
+            TextField(
+              controller: _amountController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(labelText: 'Amount', prefixText: '\$ '),
             ),
-            style: const TextStyle(color: Colors.white),
-          ),
-          const SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            initialValue: selectedCategory,
-            decoration: InputDecoration(labelText: 'Category', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
-            dropdownColor: AppTheme.surfaceLight,
-            style: const TextStyle(color: Colors.white),
-            items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-            onChanged: (v) => setState(() => selectedCategory = v!),
-          ),
-          const SizedBox(height: 16),
-          DropdownButtonFormField<AccountModel>(
-            initialValue: widget.accounts.contains(_selectedAccount) ? _selectedAccount : null,
-            decoration: InputDecoration(labelText: 'Account', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
-            dropdownColor: AppTheme.surfaceLight,
-            style: const TextStyle(color: Colors.white),
-            items: widget.accounts.map((acc) => DropdownMenuItem(value: acc, child: Text(acc.name))).toList(),
-            onChanged: (v) => setState(() => _selectedAccount = v),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _noteController,
-            decoration: InputDecoration(labelText: 'Note (Optional)', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
-            style: const TextStyle(color: Colors.white),
-          ),
-          const SizedBox(height: 32),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                final amt = double.tryParse(_amountController.text) ?? 0.0;
-                if (amt > 0 && _selectedAccount != null) {
-                  widget.onSave(amt, selectedCategory, _selectedAccount!.id, _noteController.text);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: widget.isIncome ? AppTheme.income : AppTheme.expense,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            const SizedBox(height: 14),
+            DropdownButtonFormField<String>(
+              initialValue: selectedCategory,
+              decoration: const InputDecoration(labelText: 'Category'),
+              dropdownColor: AppTheme.surfaceLight,
+              style: const TextStyle(color: AppTheme.textMain),
+              items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+              onChanged: (v) => setState(() => selectedCategory = v!),
+            ),
+            const SizedBox(height: 14),
+            DropdownButtonFormField<AccountModel>(
+              initialValue: widget.accounts.contains(_selectedAccount) ? _selectedAccount : null,
+              decoration: const InputDecoration(labelText: 'Account'),
+              dropdownColor: AppTheme.surfaceLight,
+              style: const TextStyle(color: AppTheme.textMain),
+              items: widget.accounts.map((acc) => DropdownMenuItem(value: acc, child: Text(acc.name))).toList(),
+              onChanged: (v) => setState(() => _selectedAccount = v),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: _noteController,
+              decoration: const InputDecoration(labelText: 'Note (Optional)'),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  final amt = double.tryParse(_amountController.text) ?? 0.0;
+                  if (amt > 0 && _selectedAccount != null) {
+                    widget.onSave(amt, selectedCategory, _selectedAccount!.id, _noteController.text);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: widget.isIncome ? AppTheme.income : AppTheme.expense,
+                ),
+                child: const Text('Confirm'),
               ),
-              child: const Text('Confirm', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

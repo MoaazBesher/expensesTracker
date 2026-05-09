@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/firebase_service.dart';
 import '../services/storage_service.dart';
-import 'package:intl/intl.dart';
+
 
 class MonthlyBillsScreen extends StatefulWidget {
   const MonthlyBillsScreen({super.key});
@@ -11,7 +11,7 @@ class MonthlyBillsScreen extends StatefulWidget {
 }
 
 class _MonthlyBillsScreenState extends State<MonthlyBillsScreen> {
-  DateTime _selectedMonth = DateTime.now();
+  final DateTime _selectedMonth = DateTime.now();
   List<Map<String, dynamic>> _transactions = [];
   List<Map<String, dynamic>> _filteredTransactions = [];
   bool _isLoading = true;
@@ -203,8 +203,6 @@ class _MonthlyBillsScreenState extends State<MonthlyBillsScreen> {
     if (v is String) return double.tryParse(v) ?? 0.0;
     return 0.0;
   }
-
-  String _formatDate(DateTime date) => DateFormat('MMM dd, yyyy').format(date);
 
   @override
   Widget build(BuildContext context) {

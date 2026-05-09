@@ -1,41 +1,27 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Colors - Premium Neural Palette
-  static const Color background = Color(0xFF020617); // Deepest slate
-  static const Color surface = Color(0xFF0F172A);    // Card base
-  static const Color surfaceLight = Color(0xFF1E293B);
-  
-  static const Color primary = Color(0xFF6366F1);    // Indigo
-  static const Color secondary = Color(0xFF06B6D4);  // Cyan
-  static const Color accent = Color(0xFFF43F5E);     // Rose
-  
-  static const Color income = Color(0xFF10B981);    // Emerald
-  static const Color expense = Color(0xFFEF4444);   // Red
-  
-  static const Color textMain = Colors.white;
-  static const Color textDim = Color(0xFF94A3B8);
-  static const Color textDark = Color(0xFF64748B);
+  static const Color background = Color(0xFF0D1117);
+  static const Color surface = Color(0xFF161B22);
+  static const Color surfaceLight = Color(0xFF21262D);
 
-  // Gradients
-  static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
+  static const Color primary = Color(0xFF58A6FF);
+  static const Color secondary = Color(0xFF3FB950);
+  static const Color accent = Color(0xFFF85149);
 
-  static const LinearGradient secondaryGradient = LinearGradient(
-    colors: [Color(0xFF06B6D4), Color(0xFF3B82F6)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
+  static const Color income = Color(0xFF3FB950);
+  static const Color expense = Color(0xFFF85149);
 
-  // Decorations
-  static BoxDecoration glassDecoration({Color? color, double opacity = 0.7, double radius = 24}) {
+  static const Color textMain = Color(0xFFF0F6FC);
+  static const Color textDim = Color(0xFF8B949E);
+  static const Color textDark = Color(0xFF484F58);
+  static const Color border = Color(0xFF30363D);
+
+  static BoxDecoration cardDecoration({Color? color, double radius = 16}) {
     return BoxDecoration(
-      color: (color ?? surface).withValues(alpha: opacity),
+      color: color ?? surface,
       borderRadius: BorderRadius.circular(radius),
-      border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1),
+      border: Border.all(color: border, width: 0.5),
     );
   }
 
@@ -54,23 +40,62 @@ class AppTheme {
     cardTheme: CardThemeData(
       color: surface,
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: border, width: 0.5),
+      ),
     ),
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.transparent,
       elevation: 0,
-      centerTitle: true,
+      centerTitle: false,
       titleTextStyle: TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
         color: textMain,
       ),
     ),
     textTheme: const TextTheme(
-      displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: textMain),
-      titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textMain),
+      displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.w700, color: textMain),
+      titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: textMain),
       bodyLarge: TextStyle(fontSize: 16, color: textMain),
       bodyMedium: TextStyle(fontSize: 14, color: textDim),
+    ),
+    dividerTheme: const DividerThemeData(color: border, thickness: 0.5),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: surface,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: border),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: border),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: primary, width: 1.5),
+      ),
+      labelStyle: const TextStyle(color: textDim, fontSize: 14),
+      hintStyle: const TextStyle(color: textDark, fontSize: 14),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: primary,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(foregroundColor: primary),
+    ),
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
   );
 }

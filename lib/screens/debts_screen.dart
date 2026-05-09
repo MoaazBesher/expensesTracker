@@ -3,10 +3,10 @@ import 'dart:async';
 import '../services/firebase_service.dart';
 import '../services/storage_service.dart';
 import '../utils/app_theme.dart';
+import '../utils/screen_utils.dart';
 
 class DebtsScreen extends StatefulWidget {
   const DebtsScreen({super.key});
-
   @override
   State<DebtsScreen> createState() => _DebtsScreenState();
 }
@@ -19,8 +19,6 @@ class _DebtsScreenState extends State<DebtsScreen> with SingleTickerProviderStat
   List<Map<String, dynamic>> _filteredIOweList = [];
   List<Map<String, dynamic>> _filteredOwedToMeList = [];
   StreamSubscription? _debtsSubscription;
-
-  // Search and filter
   String _searchQuery = '';
 
   @override
@@ -33,25 +31,18 @@ class _DebtsScreenState extends State<DebtsScreen> with SingleTickerProviderStat
   Future<void> _loadDebts() async {
     _debtsSubscription?.cancel();
     _debtsSubscription = FirebaseService().getDebts().listen((debts) {
-      if (mounted) {
-        setState(() {
-          _processDebtsData(debts);
-          _filterDebts();
-        });
-      }
+      if (mounted) { setState(() { _processDebtsData(debts); _filterDebts(); }); }
     });
   }
 
   void _processDebtsData(Map<String, dynamic> debts) {
     if (debts['iOwe'] is List) {
       _ioweList = List<Map<String, dynamic>>.from(debts['iOwe']);
-      _ioweList.sort((a, b) => DateTime.parse(b['createdAt'] ?? '2000-01-01')
-          .compareTo(DateTime.parse(a['createdAt'] ?? '2000-01-01')));
+      _ioweList.sort((a, b) => DateTime.parse(b['createdAt'] ?? '2000-01-01').compareTo(DateTime.parse(a['createdAt'] ?? '2000-01-01')));
     }
     if (debts['owedToMe'] is List) {
       _owedToMeList = List<Map<String, dynamic>>.from(debts['owedToMe']);
-      _owedToMeList.sort((a, b) => DateTime.parse(b['createdAt'] ?? '2000-01-01')
-          .compareTo(DateTime.parse(a['createdAt'] ?? '2000-01-01')));
+      _owedToMeList.sort((a, b) => DateTime.parse(b['createdAt'] ?? '2000-01-01').compareTo(DateTime.parse(a['createdAt'] ?? '2000-01-01')));
     }
     _calculateConsolidatedDebts();
   }
@@ -66,27 +57,17 @@ class _DebtsScreenState extends State<DebtsScreen> with SingleTickerProviderStat
       final p = d['person'] ?? 'Unknown';
       personBalances[p] = (personBalances[p] ?? 0.0) + _safeConvertAmount(d['amount']);
     }
-
     _consolidatedDebts = {};
     personBalances.forEach((p, b) {
-      if (b != 0) {
-        _consolidatedDebts[p] = {
-          'balance': b,
-          'status': b > 0 ? 'owed_to_me' : 'i_owe',
-          'absAmount': b.abs(),
-        };
-      }
+      if (b != 0) _consolidatedDebts[p] = {'balance': b, 'status': b > 0 ? 'owed_to_me' : 'i_owe', 'absAmount': b.abs()};
     });
   }
 
   void _filterDebts() {
     bool matches(Map<String, dynamic> d) {
-      final p = (d['person'] ?? '').toLowerCase();
-      final n = (d['notes'] ?? '').toLowerCase();
       final q = _searchQuery.toLowerCase();
-      return q.isEmpty || p.contains(q) || n.contains(q);
+      return q.isEmpty || (d['person'] ?? '').toString().toLowerCase().contains(q) || (d['notes'] ?? '').toString().toLowerCase().contains(q);
     }
-
     _filteredIOweList = _ioweList.where(matches).toList();
     _filteredOwedToMeList = _owedToMeList.where(matches).toList();
   }
@@ -100,16 +81,16 @@ class _DebtsScreenState extends State<DebtsScreen> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    S.init(context);
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Debt Management'),
+        toolbarHeight: 0,
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: AppTheme.primary,
           labelColor: AppTheme.primary,
           unselectedLabelColor: AppTheme.textDim,
-          indicatorSize: TabBarIndicatorSize.label,
           tabs: const [
             Tab(text: 'Summary'),
             Tab(text: 'I Owe'),
@@ -134,39 +115,36 @@ class _DebtsScreenState extends State<DebtsScreen> with SingleTickerProviderStat
   }
 
   Widget _buildSummaryTab() {
-    if (_consolidatedDebts.isEmpty) return _buildEmptyState('No active debts');
-    
+    if (_consolidatedDebts.isEmpty) return Center(child: Text('No active debts', style: TextStyle(color: AppTheme.textDim, fontSize: S.fontBody)));
     return ListView.builder(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(S.sectionPadding),
       itemCount: _consolidatedDebts.length,
       itemBuilder: (context, index) {
         String person = _consolidatedDebts.keys.elementAt(index);
         var data = _consolidatedDebts[person];
         bool isOwedToMe = data['status'] == 'owed_to_me';
-        
         return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          padding: const EdgeInsets.all(20),
-          decoration: AppTheme.glassDecoration(opacity: 0.05),
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(16),
+          decoration: AppTheme.cardDecoration(radius: 12),
           child: Row(
             children: [
               CircleAvatar(
+                radius: 18,
                 backgroundColor: (isOwedToMe ? AppTheme.income : AppTheme.expense).withValues(alpha: 0.1),
-                child: Text(person[0].toUpperCase(), style: TextStyle(color: isOwedToMe ? AppTheme.income : AppTheme.expense)),
+                child: Text(person[0].toUpperCase(), style: TextStyle(color: isOwedToMe ? AppTheme.income : AppTheme.expense, fontWeight: FontWeight.w600)),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(person, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                    Text(isOwedToMe ? 'Owes you money' : 'You owe them money', 
-                         style: TextStyle(color: AppTheme.textDim, fontSize: 12)),
+                    Text(person, style: const TextStyle(color: AppTheme.textMain, fontWeight: FontWeight.w600, fontSize: 15)),
+                    Text(isOwedToMe ? 'Owes you' : 'You owe them', style: TextStyle(color: AppTheme.textDim, fontSize: S.fontSmall)),
                   ],
                 ),
               ),
-              Text('\$${data['absAmount'].toStringAsFixed(0)}', 
-                   style: TextStyle(color: isOwedToMe ? AppTheme.income : AppTheme.expense, fontWeight: FontWeight.bold, fontSize: 18)),
+              Text('\$${data['absAmount'].toStringAsFixed(0)}', style: TextStyle(color: isOwedToMe ? AppTheme.income : AppTheme.expense, fontWeight: FontWeight.w600, fontSize: 17)),
             ],
           ),
         );
@@ -178,27 +156,27 @@ class _DebtsScreenState extends State<DebtsScreen> with SingleTickerProviderStat
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(S.sectionPadding),
           child: Container(
-            height: 48,
-            decoration: AppTheme.glassDecoration(opacity: 0.05),
+            height: 42,
+            decoration: AppTheme.cardDecoration(radius: 10),
             child: TextField(
               onChanged: (v) => setState(() { _searchQuery = v; _filterDebts(); }),
               decoration: const InputDecoration(
-                hintText: 'Search people or notes...',
-                prefixIcon: Icon(Icons.search, color: AppTheme.textDim),
+                hintText: 'Search people...',
                 border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 12),
+                prefixIcon: Icon(Icons.search, color: AppTheme.textDim, size: 18),
+                contentPadding: EdgeInsets.symmetric(vertical: 10),
               ),
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: AppTheme.textMain, fontSize: 13),
             ),
           ),
         ),
         Expanded(
-          child: list.isEmpty 
-              ? _buildEmptyState('No entries found')
+          child: list.isEmpty
+              ? Center(child: Text('No entries', style: TextStyle(color: AppTheme.textDim, fontSize: S.fontBody)))
               : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: EdgeInsets.symmetric(horizontal: S.sectionPadding),
                   itemCount: list.length,
                   itemBuilder: (context, index) => _buildDebtItem(list[index], isIOwe),
                 ),
@@ -210,21 +188,16 @@ class _DebtsScreenState extends State<DebtsScreen> with SingleTickerProviderStat
   Widget _buildDebtItem(Map<String, dynamic> d, bool isIOwe) {
     final amount = _safeConvertAmount(d['amount']);
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: AppTheme.glassDecoration(opacity: 0.03, radius: 16),
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: AppTheme.cardDecoration(radius: 12),
       child: ListTile(
         contentPadding: const EdgeInsets.all(12),
-        title: Text(d['person'] ?? 'Unknown', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        subtitle: Text(d['notes'] ?? 'No notes', style: const TextStyle(color: AppTheme.textDim, fontSize: 12)),
-        trailing: Text('\$${amount.toStringAsFixed(0)}', 
-                     style: TextStyle(color: isIOwe ? AppTheme.expense : AppTheme.income, fontWeight: FontWeight.bold, fontSize: 16)),
+        title: Text(d['person'] ?? 'Unknown', style: const TextStyle(color: AppTheme.textMain, fontWeight: FontWeight.w600, fontSize: 14)),
+        subtitle: Text(d['notes'] ?? 'No notes', style: TextStyle(color: AppTheme.textDim, fontSize: S.fontSmall)),
+        trailing: Text('\$${amount.toStringAsFixed(0)}', style: TextStyle(color: isIOwe ? AppTheme.expense : AppTheme.income, fontWeight: FontWeight.w600, fontSize: 15)),
         onLongPress: () => _confirmDelete(d['id']),
       ),
     );
-  }
-
-  Widget _buildEmptyState(String msg) {
-    return Center(child: Text(msg, style: const TextStyle(color: AppTheme.textDim)));
   }
 
   void _showAddDebtMenu() {
@@ -232,13 +205,17 @@ class _DebtsScreenState extends State<DebtsScreen> with SingleTickerProviderStat
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: AppTheme.glassDecoration(color: AppTheme.surfaceLight, opacity: 1),
-        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+          border: Border(top: BorderSide(color: AppTheme.border)),
+        ),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('New Debt Entry', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 32),
+            const Text('New Debt', style: TextStyle(color: AppTheme.textMain, fontSize: 18, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -246,7 +223,6 @@ class _DebtsScreenState extends State<DebtsScreen> with SingleTickerProviderStat
                 _buildAddOption('Owed to Me', Icons.download_rounded, AppTheme.income, false),
               ],
             ),
-            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -259,12 +235,12 @@ class _DebtsScreenState extends State<DebtsScreen> with SingleTickerProviderStat
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
-            child: Icon(icon, color: color, size: 32),
+            child: Icon(icon, color: color, size: 28),
           ),
-          const SizedBox(height: 12),
-          Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          Text(label, style: const TextStyle(color: AppTheme.textMain, fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -280,60 +256,55 @@ class _DebtsScreenState extends State<DebtsScreen> with SingleTickerProviderStat
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: AppTheme.glassDecoration(color: AppTheme.surfaceLight, opacity: 1),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+          border: Border(top: BorderSide(color: AppTheme.border)),
+        ),
         padding: EdgeInsets.only(left: 24, right: 24, top: 24, bottom: MediaQuery.of(context).viewInsets.bottom + 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Add ${isIOwe ? 'I Owe' : 'Owed to Me'}', 
-                 style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 24),
-            TextField(
-              controller: personController,
-              decoration: InputDecoration(labelText: 'Person Name', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
-              style: const TextStyle(color: Colors.white),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: amountController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(labelText: 'Amount', prefixText: '\$ ', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
-              style: const TextStyle(color: Colors.white),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: noteController,
-              decoration: InputDecoration(labelText: 'Notes', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
-              style: const TextStyle(color: Colors.white),
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () async {
-                  final p = personController.text.trim();
-                  final a = double.tryParse(amountController.text) ?? 0.0;
-                  if (p.isNotEmpty && a > 0) {
-                    await FirebaseService().addDebt(type: isIOwe ? 'iOwe' : 'owedToMe', person: p, amount: a, notes: noteController.text);
-                    await StorageService.saveLocalDebt(isIOwe ? 'iOwe' : 'owedToMe', {
-                      'amount': a.toString(),
-                      'person': p,
-                      'notes': noteController.text,
-                      'dueDate': null,
-                      'createdAt': DateTime.now().toIso8601String(),
-                    });
-                    if (context.mounted) Navigator.pop(context);
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: isIOwe ? AppTheme.expense : AppTheme.income,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: const Text('Confirm', style: TextStyle(fontWeight: FontWeight.bold)),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Add ${isIOwe ? 'I Owe' : 'Owed to Me'}', style: const TextStyle(color: AppTheme.textMain, fontSize: 18, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 20),
+              TextField(
+                controller: personController,
+                decoration: const InputDecoration(labelText: 'Person'),
               ),
-            ),
-          ],
+              const SizedBox(height: 14),
+              TextField(
+                controller: amountController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(labelText: 'Amount', prefixText: '\$ '),
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: noteController,
+                decoration: const InputDecoration(labelText: 'Notes'),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final p = personController.text.trim();
+                    final a = double.tryParse(amountController.text) ?? 0.0;
+                    if (p.isNotEmpty && a > 0) {
+                      await FirebaseService().addDebt(type: isIOwe ? 'iOwe' : 'owedToMe', person: p, amount: a, notes: noteController.text);
+                      await StorageService.saveLocalDebt(isIOwe ? 'iOwe' : 'owedToMe', {
+                        'amount': a.toString(), 'person': p, 'notes': noteController.text, 'dueDate': null,
+                        'createdAt': DateTime.now().toIso8601String(),
+                      });
+                      if (context.mounted) Navigator.pop(context);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: isIOwe ? AppTheme.expense : AppTheme.income),
+                  child: const Text('Confirm'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -344,14 +315,12 @@ class _DebtsScreenState extends State<DebtsScreen> with SingleTickerProviderStat
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.surfaceLight,
-        title: const Text('Delete Entry?'),
+        backgroundColor: AppTheme.surface,
+        title: const Text('Delete Entry?', style: TextStyle(fontSize: 16)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          TextButton(onPressed: () async {
-            Navigator.pop(context);
-            await FirebaseService().deleteDebt(id);
-          }, child: const Text('Delete', style: TextStyle(color: AppTheme.accent))),
+          TextButton(onPressed: () async { Navigator.pop(context); await FirebaseService().deleteDebt(id); },
+            child: const Text('Delete', style: TextStyle(color: AppTheme.accent))),
         ],
       ),
     );

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/auth_service.dart';
+import '../utils/app_theme.dart';
+import '../utils/screen_utils.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
-
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
@@ -14,137 +15,74 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
 
   void _signInWithGoogle() async {
-    setState(() {
-      _isLoading = true;
-    });
-
+    setState(() => _isLoading = true);
     try {
       final userCredential = await _authService.signInWithGoogle();
-      if (userCredential != null) {
-        // Successfully signed in, will automatically navigate due to StreamBuilder in main.dart
-      } else {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (userCredential == null) setState(() => _isLoading = false);
     } catch (e) {
       String errorMessage = e.toString();
-      if (e is PlatformException) {
-        errorMessage = 'Error [${e.code}]: ${e.message}';
-      }
-      
+      if (e is PlatformException) errorMessage = 'Error [${e.code}]: ${e.message}';
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to sign in: $errorMessage'),
-            backgroundColor: Colors.redAccent,
-            duration: const Duration(seconds: 5),
-            action: SnackBarAction(
-              label: 'Copy',
-              textColor: Colors.white,
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: errorMessage));
-              },
-            ),
+            content: Text('Sign in failed: $errorMessage', style: const TextStyle(fontSize: 13)),
+            backgroundColor: AppTheme.accent,
+            duration: const Duration(seconds: 4),
           ),
         );
       }
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    S.init(context);
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A), // Dark theme background
+      backgroundColor: AppTheme.background,
       body: SafeArea(
         child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo or Icon
                 Container(
-                  width: 120,
-                  height: 120,
+                  width: 72, height: 72,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF6C63FF), Color(0xFF2DD4BF)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: AppTheme.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF6C63FF).withValues(alpha: 0.5),
-                        blurRadius: 24,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
                   ),
-                  child: const Icon(Icons.account_balance_wallet, size: 64, color: Colors.white),
+                  child: const Icon(Icons.account_balance_wallet, size: 36, color: AppTheme.primary),
                 ),
-                const SizedBox(height: 48),
+                const SizedBox(height: 32),
                 const Text(
-                  'Welcome to\nExpenses Tracker',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    height: 1.2,
-                  ),
+                  'Welcome',
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.textMain),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
                 Text(
-                  'Manage your money sources, debts, and transactions securely.',
+                  'Track your finances.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white.withValues(alpha: 0.7),
-                  ),
+                  style: TextStyle(fontSize: 14, color: AppTheme.textDim),
                 ),
                 const SizedBox(height: 48),
                 _isLoading
-                    ? const CircularProgressIndicator(color: Color(0xFF2DD4BF))
-                    : InkWell(
-                        onTap: _signInWithGoogle,
-                        borderRadius: BorderRadius.circular(16),
-                        child: Container(
-                          height: 56,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.1),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
+                    ? const CircularProgressIndicator(color: AppTheme.primary)
+                    : SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: _signInWithGoogle,
+                          icon: Image.network(
+                            'https://cdn-icons-png.flaticon.com/512/2991/2991148.png',
+                            height: 20,
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // Google Logo icon
-                              Image.network(
-                                'https://cdn-icons-png.flaticon.com/512/2991/2991148.png', // PNG version
-                                height: 24,
-                              ),
-                              const SizedBox(width: 12),
-                              const Text(
-                                'Continue with Google',
-                                style: TextStyle(
-                                  color: Colors.black87,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
+                          label: const Text('Continue with Google'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppTheme.textMain,
+                            side: const BorderSide(color: AppTheme.border),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
                         ),
                       ),

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import '../services/firebase_service.dart';
 import '../models/account_model.dart';
 import '../utils/app_theme.dart';
+import '../utils/screen_utils.dart';
 
 class AccountsScreen extends StatefulWidget {
   const AccountsScreen({super.key});
-
   @override
   State<AccountsScreen> createState() => _AccountsScreenState();
 }
@@ -15,64 +15,62 @@ class _AccountsScreenState extends State<AccountsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    S.init(context);
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: const Text('Money Sources'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add, color: AppTheme.primary),
-            onPressed: () => _showAddAccountSheet(),
-          ),
-        ],
-      ),
-      body: StreamBuilder<List<AccountModel>>(
+      body: Stack(
+        children: [
+          StreamBuilder<List<AccountModel>>(
         stream: _firebaseService.getAccounts(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator(color: AppTheme.primary));
           }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return _buildEmptyState();
-          }
-
-          final accounts = snapshot.data!;
+          if (!snapshot.hasData || snapshot.data!.isEmpty) return _buildEmptyState();
           return ListView.builder(
-            padding: const EdgeInsets.all(24),
-            itemCount: accounts.length,
-            itemBuilder: (context, index) => _buildAccountTile(accounts[index]),
+            padding: EdgeInsets.all(S.sectionPadding),
+            itemCount: snapshot.data!.length,
+            itemBuilder: (context, index) => _buildAccountTile(snapshot.data![index]),
           );
         },
+      ),
+          Positioned(
+            right: 24, bottom: 24,
+            child: FloatingActionButton(
+              onPressed: _showAddAccountSheet,
+              backgroundColor: AppTheme.primary,
+              child: const Icon(Icons.add, color: Colors.white),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildAccountTile(AccountModel account) {
     final isVisa = account.type.toLowerCase().contains('visa');
-    
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: AppTheme.glassDecoration(opacity: 0.05),
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: AppTheme.cardDecoration(radius: 12),
       child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
+        contentPadding: const EdgeInsets.all(14),
         leading: Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             color: AppTheme.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(isVisa ? Icons.credit_card : Icons.account_balance_wallet, color: AppTheme.primary),
+          child: Icon(isVisa ? Icons.credit_card : Icons.account_balance_wallet, color: AppTheme.primary, size: 20),
         ),
-        title: Text(account.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        subtitle: Text(account.type, style: TextStyle(color: AppTheme.textDim, fontSize: 12)),
+        title: Text(account.name, style: const TextStyle(color: AppTheme.textMain, fontWeight: FontWeight.w600, fontSize: 15)),
+        subtitle: Text(account.type, style: TextStyle(color: AppTheme.textDim, fontSize: S.fontSmall)),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text('\$${account.balance.toStringAsFixed(2)}', 
-                 style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-            const SizedBox(height: 4),
-            Text(account.isDefault ? 'Primary' : '', style: const TextStyle(color: AppTheme.secondary, fontSize: 10, fontWeight: FontWeight.bold)),
+            Text('\$${account.balance.toStringAsFixed(2)}', style: const TextStyle(color: AppTheme.textMain, fontWeight: FontWeight.w600, fontSize: 15)),
+            if (account.isDefault) const SizedBox(height: 2),
+            if (account.isDefault) Text('Primary', style: TextStyle(color: AppTheme.primary, fontSize: 10, fontWeight: FontWeight.w600)),
           ],
         ),
         onLongPress: () => _showAccountOptions(account),
@@ -85,14 +83,13 @@ class _AccountsScreenState extends State<AccountsScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.account_balance_wallet_outlined, size: 64, color: AppTheme.textDim.withValues(alpha: 0.3)),
-          const SizedBox(height: 16),
-          Text('No accounts found', style: TextStyle(color: AppTheme.textDim, fontSize: 16)),
-          const SizedBox(height: 24),
+          Icon(Icons.account_balance_wallet_outlined, size: 48, color: AppTheme.textDim.withValues(alpha: 0.3)),
+          const SizedBox(height: 12),
+          Text('No accounts yet', style: TextStyle(color: AppTheme.textDim, fontSize: S.fontBody)),
+          const SizedBox(height: 20),
           ElevatedButton(
             onPressed: () => _showAddAccountSheet(),
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary),
-            child: const Text('Add Your First Account'),
+            child: const Text('Add Account'),
           ),
         ],
       ),
@@ -108,53 +105,41 @@ class _AccountsScreenState extends State<AccountsScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setSheetState) => Container(
-          decoration: AppTheme.glassDecoration(color: AppTheme.surfaceLight, opacity: 1),
-          padding: EdgeInsets.only(
-            left: 24, right: 24, top: 24,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-          ),
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+          border: Border(top: BorderSide(color: AppTheme.border)),
+        ),
+        padding: EdgeInsets.only(left: 24, right: 24, top: 24, bottom: MediaQuery.of(context).viewInsets.bottom + 24),
+        child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Add New Money Source', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 24),
+              const Text('Add Money Source', style: TextStyle(color: AppTheme.textMain, fontSize: 18, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 20),
               TextField(
                 controller: nameController,
-                decoration: InputDecoration(
-                  labelText: 'Account Name',
-                  hintText: 'e.g. My Visa, Wallet, Bank',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(labelText: 'Name', hintText: 'e.g. My Visa'),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               TextField(
                 controller: balanceController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: InputDecoration(
-                  labelText: 'Initial Balance',
-                  prefixText: '\$ ',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(labelText: 'Balance', prefixText: '\$ '),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               DropdownButtonFormField<String>(
                 initialValue: selectedType,
-                decoration: InputDecoration(
-                  labelText: 'Account Type',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
+                decoration: const InputDecoration(labelText: 'Type'),
                 dropdownColor: AppTheme.surfaceLight,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: AppTheme.textMain),
                 items: ['Cash', 'Bank', 'Visa', 'Savings', 'Other']
                     .map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
-                onChanged: (val) => setSheetState(() => selectedType = val!),
+                onChanged: (val) => setState(() => selectedType = val!),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -166,12 +151,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                       if (context.mounted) Navigator.pop(context);
                     }
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: const Text('Create Account', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text('Create Account'),
                 ),
               ),
             ],
@@ -186,7 +166,11 @@ class _AccountsScreenState extends State<AccountsScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: AppTheme.glassDecoration(color: AppTheme.surfaceLight, opacity: 1),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+          border: Border(top: BorderSide(color: AppTheme.border)),
+        ),
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -203,7 +187,6 @@ class _AccountsScreenState extends State<AccountsScreen> {
               leading: const Icon(Icons.delete_outline, color: AppTheme.accent),
               title: const Text('Delete Account', style: TextStyle(color: AppTheme.accent)),
               onTap: () async {
-                // Should add confirmation dialog
                 await _firebaseService.deleteAccount(account.id);
                 if (context.mounted) Navigator.pop(context);
               },
