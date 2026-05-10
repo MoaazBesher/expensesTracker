@@ -19,7 +19,7 @@ class TransactionsScreenState extends State<TransactionsScreen> with SingleTicke
   List<Map<String, dynamic>> _transactions = [];
   List<Map<String, dynamic>> _filteredTransactions = [];
   String _searchQuery = '';
-  String _selectedType = 'all';
+  final String _selectedType = 'all';
   bool _isLoading = true;
   List<AccountModel> _accounts = [];
   AccountModel? _selectedAccount;

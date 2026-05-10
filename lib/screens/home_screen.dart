@@ -254,7 +254,7 @@ class _HomeScreenState extends State<HomeScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-                child: _sectionHeader('Money Sources'),
+                child: _sectionHeader('Quick Actions'),
               ),
             ),
 
@@ -278,7 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-                child: _sectionHeader('This Month'),
+                child: _sectionHeader('Finance Summary'),
               ),
             ),
             SliverToBoxAdapter(
@@ -305,7 +305,7 @@ class _HomeScreenState extends State<HomeScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-                child: _sectionHeader('Recent Transactions'),
+                child: _sectionHeader('Recent Activity'),
               ),
             ),
 
@@ -321,6 +321,28 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
+
+            // ── Debts & Alerts ───────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+                child: _sectionHeader('Debts & Alerts'),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    Expanded(child: _buildSummaryCard('I Owe', _totalIOwe, Icons.arrow_upward_rounded, AppTheme.expense)),
+                    const SizedBox(width: 12),
+                    Expanded(child: _buildSummaryCard('Owed to Me', _totalOwedMe, Icons.arrow_downward_rounded, AppTheme.income)),
+                    const SizedBox(width: 12),
+                    Expanded(child: _buildSummaryCard('Alerts', _alertsCount.toDouble(), Icons.notifications_rounded, AppTheme.accent, isCurrency: false)),
+                  ],
+                ),
+              ),
+            ),
 
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
           ],
@@ -407,7 +429,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSummaryCard(String title, double amount, IconData icon, Color color) {
+  Widget _buildSummaryCard(String title, double amount, IconData icon, Color color, {bool isCurrency = true}) {
     final isNegative = amount < 0;
     return Container(
       padding: const EdgeInsets.all(14),
@@ -427,7 +449,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(title, style: const TextStyle(color: AppTheme.textDim, fontSize: 11, fontWeight: FontWeight.w500)),
           const SizedBox(height: 3),
           Text(
-            '\$${amount.abs().toStringAsFixed(0)}',
+            isCurrency ? '\$${amount.abs().toStringAsFixed(0)}' : amount.toStringAsFixed(0),
             style: TextStyle(
               color: isNegative ? AppTheme.expense : color,
               fontSize: 15,

@@ -1,5 +1,4 @@
 import 'package:home_widget/home_widget.dart';
-import 'firebase_service.dart';
 import '../models/account_model.dart';
 
 /// Updates Android home screen widget data.

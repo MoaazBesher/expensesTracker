@@ -402,7 +402,8 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
 
                   // Category
                   DropdownButtonFormField<String>(
-                    value: selectedCategory,
+                    key: ValueKey(isIncome),
+                    initialValue: selectedCategory,
                     dropdownColor: AppTheme.surfaceLight,
                     style: const TextStyle(color: AppTheme.textMain, fontSize: 13),
                     decoration: InputDecoration(
