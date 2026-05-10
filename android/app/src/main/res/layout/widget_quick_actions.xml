@@ -3,17 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="10dp"
+    android:padding="8dp"
     android:background="@drawable/widget_background">
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Quick Actions"
-        android:textColor="#F0F6FC"
-        android:textSize="11sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="8dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -26,12 +17,12 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:layout_marginEnd="3dp"
+            android:layout_marginEnd="2dp"
             android:background="@drawable/widget_chip_green"
-            android:padding="6dp"
-            android:text="+ Income"
+            android:padding="4dp"
+            android:text="+Inc"
             android:textColor="#3FB950"
-            android:textSize="10sp"
+            android:textSize="9sp"
             android:textStyle="bold"
             android:gravity="center" />
 
@@ -40,13 +31,13 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:layout_marginStart="3dp"
-            android:layout_marginEnd="3dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
             android:background="@drawable/widget_chip_red"
-            android:padding="6dp"
-            android:text="- Expense"
+            android:padding="4dp"
+            android:text="-Exp"
             android:textColor="#F85149"
-            android:textSize="10sp"
+            android:textSize="9sp"
             android:textStyle="bold"
             android:gravity="center" />
     </LinearLayout>
@@ -62,13 +53,13 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:layout_marginEnd="3dp"
-            android:layout_marginTop="3dp"
+            android:layout_marginEnd="2dp"
+            android:layout_marginTop="2dp"
             android:background="@drawable/widget_chip_orange"
-            android:padding="6dp"
+            android:padding="4dp"
             android:text="Alert"
             android:textColor="#D29922"
-            android:textSize="10sp"
+            android:textSize="9sp"
             android:textStyle="bold"
             android:gravity="center" />
 
@@ -77,13 +68,13 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:layout_marginStart="3dp"
-            android:layout_marginTop="3dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginTop="2dp"
             android:background="@drawable/widget_chip_purple"
-            android:padding="6dp"
+            android:padding="4dp"
             android:text="Debt"
             android:textColor="#BC8CFF"
-            android:textSize="10sp"
+            android:textSize="9sp"
             android:textStyle="bold"
             android:gravity="center" />
     </LinearLayout>
