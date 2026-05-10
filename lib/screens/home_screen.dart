@@ -21,6 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
   double _monthlyIncome = 0.0;
   double _monthlyExpenses = 0.0;
   List<Map<String, dynamic>> _recentTransactions = [];
+  List<Map<String, dynamic>> _recentAlerts = [];
   double _totalIOwe = 0.0;
   double _totalOwedMe = 0.0;
   int _alertsCount = 0;
@@ -111,6 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
       totalIOwe: _totalIOwe,
       totalOwedMe: _totalOwedMe,
       alertsCount: _alertsCount,
+      recentAlerts: _recentAlerts,
     );
   }
 
@@ -126,7 +128,10 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     FirebaseService().getReminders().listen((reminders) {
       if (mounted) {
-        setState(() => _alertsCount = reminders.length);
+        setState(() {
+          _alertsCount = reminders.length;
+          _recentAlerts = reminders.take(2).toList();
+        });
         _updateHomeWidget();
       }
     });

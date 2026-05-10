@@ -56,11 +56,21 @@ class WidgetService {
     required double totalIOwe,
     required double totalOwedMe,
     required int alertsCount,
+    required List<Map<String, dynamic>> recentAlerts,
   }) async {
     try {
       await HomeWidget.saveWidgetData('total_i_owe', totalIOwe.toStringAsFixed(0));
       await HomeWidget.saveWidgetData('total_owed_me', totalOwedMe.toStringAsFixed(0));
       await HomeWidget.saveWidgetData('alerts_count', alertsCount);
+
+      final limited = recentAlerts.take(2).toList();
+      for (int i = 0; i < limited.length; i++) {
+        final idx = i + 1;
+        await HomeWidget.saveWidgetData('alert_${idx}_title', limited[i]['title']?.toString() ?? '');
+        final dt = limited[i]['date']?.toString() ?? '';
+        await HomeWidget.saveWidgetData('alert_${idx}_date', dt.length >= 10 ? dt.substring(0, 10) : dt);
+      }
+
       await HomeWidget.updateWidget(androidName: _androidDebtsAlertsName);
     } catch (_) {}
   }
