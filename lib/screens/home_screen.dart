@@ -104,6 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
       totalBalance: _totalBalance,
       incomeTotal: _monthlyIncome,
       expenseTotal: _monthlyExpenses,
+      accounts: _accounts,
     );
     WidgetService.updateRecentWidget(_recentTransactions);
     WidgetService.updateDebtsAlertsWidget(

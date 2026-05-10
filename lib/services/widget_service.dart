@@ -1,4 +1,5 @@
 import 'package:home_widget/home_widget.dart';
+import '../models/account_model.dart';
 
 /// Updates Android home screen widget data.
 /// Call after balance/transaction changes.
@@ -8,16 +9,26 @@ class WidgetService {
   static const _androidRecentName = 'RecentTransactionsWidget';
   static const _androidDebtsAlertsName = 'DebtsAlertsWidget';
 
-  /// Push summary data to the summary widget
+  /// Push summary data + accounts to the summary widget
   static Future<void> updateSummaryWidget({
     required double totalBalance,
     required double incomeTotal,
     required double expenseTotal,
+    required List<AccountModel> accounts,
   }) async {
     try {
       await HomeWidget.saveWidgetData('total_balance', totalBalance.toStringAsFixed(2));
       await HomeWidget.saveWidgetData('income_total', incomeTotal.toStringAsFixed(0));
       await HomeWidget.saveWidgetData('expense_total', expenseTotal.toStringAsFixed(0));
+
+      final limited = accounts.take(4).toList();
+      await HomeWidget.saveWidgetData('acc_count', limited.length);
+      for (int i = 0; i < limited.length; i++) {
+        final idx = i + 1;
+        await HomeWidget.saveWidgetData('acc_${idx}_name', limited[i].name);
+        await HomeWidget.saveWidgetData('acc_${idx}_bal', limited[i].balance.toStringAsFixed(2));
+      }
+
       await HomeWidget.updateWidget(androidName: _androidWidgetName);
     } catch (_) {
       // Widget may not be placed on home screen — ignore
