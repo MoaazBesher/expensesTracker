@@ -254,7 +254,7 @@ class _HomeScreenState extends State<HomeScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-                child: _sectionHeader('Quick Actions'),
+                child: _sectionHeader('Accounts'),
               ),
             ),
 
