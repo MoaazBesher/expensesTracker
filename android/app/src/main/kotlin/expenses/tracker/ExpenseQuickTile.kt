@@ -12,7 +12,7 @@ class ExpenseQuickTile : TileService() {
     override fun onStartListening() {
         super.onStartListening()
         qsTile?.let { tile ->
-            tile.label = "Add Expense"
+            tile.label = "Expenses Tracker"
             tile.updateTile()
         }
     }
