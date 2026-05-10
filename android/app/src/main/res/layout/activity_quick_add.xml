@@ -3,16 +3,16 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="#1C2128"
-    android:padding="24dp">
+    android:background="#161B22"
+    android:padding="20dp">
 
     <!-- Title -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="⚡ Quick Add"
+        android:text="Quick Add"
         android:textColor="#F0F6FC"
-        android:textSize="18sp"
+        android:textSize="16sp"
         android:textStyle="bold"
         android:layout_marginBottom="16dp" />
 
@@ -21,31 +21,31 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginBottom="14dp"
         android:background="#0D1117"
-        android:padding="4dp">
+        android:padding="3dp"
+        android:gravity="center">
 
         <Button
             android:id="@+id/btn_expense"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="36dp"
             android:layout_weight="1"
             android:text="Expense"
-            android:textSize="13sp"
+            android:textSize="12sp"
             android:textColor="#F85149"
             android:backgroundTint="#F8514920"
-            android:layout_marginEnd="4dp" />
+            android:layout_marginEnd="2dp" />
 
         <Button
             android:id="@+id/btn_income"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="36dp"
             android:layout_weight="1"
             android:text="Income"
-            android:textSize="13sp"
+            android:textSize="12sp"
             android:textColor="#8B949E"
             android:backgroundTint="#0D1117"
-            android:layout_marginStart="4dp" />
+            android:layout_marginStart="2dp" />
     </LinearLayout>
 
     <!-- Amount -->
@@ -55,62 +55,66 @@
         android:layout_height="wrap_content"
         android:hint="Amount"
         android:textColor="#F0F6FC"
-        android:textColorHint="#8B949E"
-        android:textSize="20sp"
+        android:textColorHint="#484F58"
+        android:textSize="18sp"
         android:textStyle="bold"
         android:inputType="numberDecimal"
         android:background="#0D1117"
-        android:padding="14dp"
-        android:layout_marginBottom="10dp" />
+        android:padding="12dp"
+        android:layout_marginTop="12dp" />
 
     <!-- Category Spinner -->
     <Spinner
         android:id="@+id/spinner_category"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="42dp"
         android:background="#0D1117"
         android:padding="10dp"
-        android:popupBackground="#1C2128"
-        android:layout_marginBottom="10dp" />
+        android:popupBackground="#161B22"
+        android:layout_marginTop="10dp" />
 
     <!-- Note -->
     <EditText
         android:id="@+id/edit_note"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Note (optional)"
+        android:hint="Note"
         android:textColor="#F0F6FC"
-        android:textColorHint="#8B949E"
+        android:textColorHint="#484F58"
         android:textSize="13sp"
         android:inputType="text"
         android:background="#0D1117"
-        android:padding="14dp"
-        android:layout_marginBottom="16dp" />
+        android:padding="12dp"
+        android:layout_marginTop="10dp" />
 
     <!-- Buttons -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp">
 
         <Button
             android:id="@+id/btn_cancel"
             android:layout_width="0dp"
-            android:layout_height="46dp"
+            android:layout_height="42dp"
             android:layout_weight="1"
             android:text="Cancel"
             android:textColor="#8B949E"
-            android:backgroundTint="#30363D"
-            android:layout_marginEnd="8dp" />
+            android:textSize="12sp"
+            android:backgroundTint="#21262D"
+            android:layout_marginEnd="6dp" />
 
         <Button
             android:id="@+id/btn_save"
             android:layout_width="0dp"
-            android:layout_height="46dp"
+            android:layout_height="42dp"
             android:layout_weight="2"
             android:text="Save"
             android:textColor="#FFFFFF"
+            android:textSize="12sp"
             android:textStyle="bold"
-            android:backgroundTint="#F85149" />
+            android:backgroundTint="#238636" />
     </LinearLayout>
+
 </LinearLayout>
