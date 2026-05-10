@@ -23,7 +23,7 @@ class DebtsAlertsWidget : HomeWidgetProvider() {
 
             views.setTextViewText(R.id.i_owe_amt, "$$iOwe")
             views.setTextViewText(R.id.owed_me_amt, "$$owedMe")
-            views.setTextViewText(R.id.alerts_count, "$alerts active alerts")
+            views.setTextViewText(R.id.alerts_count, "$alerts")
 
             appWidgetManager.updateAppWidget(widgetId, views)
         }

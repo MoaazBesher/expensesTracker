@@ -3,76 +3,74 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
+    android:padding="10dp"
     android:background="@drawable/widget_background">
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Recent Activity"
+        android:text="Recent"
         android:textColor="#F0F6FC"
-        android:textSize="13sp"
+        android:textSize="11sp"
         android:textStyle="bold"
-        android:layout_marginBottom="12dp" />
+        android:layout_marginBottom="8dp" />
 
     <LinearLayout
         android:id="@+id/transactions_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
-        
-        <!-- Transaction Item 1 -->
+
         <LinearLayout
             android:id="@+id/txn_1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:paddingTop="6dp"
-            android:paddingBottom="6dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
             android:visibility="gone">
-            <TextView android:id="@+id/title_1" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Food" android:textColor="#F0F6FC" android:textSize="12sp" />
-            <TextView android:id="@+id/amt_1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="-$12" android:textColor="#F85149" android:textSize="12sp" android:textStyle="bold" />
+            <TextView android:id="@+id/title_1" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="#F0F6FC" android:textSize="10sp" android:maxLines="1" android:ellipsize="end" />
+            <TextView android:id="@+id/amt_1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#F85149" android:textSize="10sp" android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- Transaction Item 2 -->
         <LinearLayout
             android:id="@+id/txn_2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:paddingTop="6dp"
-            android:paddingBottom="6dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
             android:visibility="gone">
-            <TextView android:id="@+id/title_2" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Salary" android:textColor="#F0F6FC" android:textSize="12sp" />
-            <TextView android:id="@+id/amt_2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="+$500" android:textColor="#3FB950" android:textSize="12sp" android:textStyle="bold" />
+            <TextView android:id="@+id/title_2" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="#F0F6FC" android:textSize="10sp" android:maxLines="1" android:ellipsize="end" />
+            <TextView android:id="@+id/amt_2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#3FB950" android:textSize="10sp" android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- Transaction Item 3 -->
         <LinearLayout
             android:id="@+id/txn_3"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:paddingTop="6dp"
-            android:paddingBottom="6dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp"
             android:visibility="gone">
-            <TextView android:id="@+id/title_3" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Rent" android:textColor="#F0F6FC" android:textSize="12sp" />
-            <TextView android:id="@+id/amt_3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="-$200" android:textColor="#F85149" android:textSize="12sp" android:textStyle="bold" />
+            <TextView android:id="@+id/title_3" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="#F0F6FC" android:textSize="10sp" android:maxLines="1" android:ellipsize="end" />
+            <TextView android:id="@+id/amt_3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#F85149" android:textSize="10sp" android:textStyle="bold" />
         </LinearLayout>
+
     </LinearLayout>
 
     <TextView
         android:id="@+id/empty_msg"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="No recent transactions"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:text="No transactions"
         android:textColor="#8B949E"
-        android:textSize="11sp"
+        android:textSize="10sp"
         android:gravity="center"
-        android:layout_marginTop="10dp"
         android:visibility="visible" />
 
 </LinearLayout>

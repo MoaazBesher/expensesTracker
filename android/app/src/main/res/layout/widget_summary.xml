@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="8dp"
+    android:padding="10dp"
     android:background="@drawable/widget_background">
 
     <TextView
@@ -13,7 +13,7 @@
         android:gravity="center"
         android:text="$0.00"
         android:textColor="#F0F6FC"
-        android:textSize="22sp"
+        android:textSize="20sp"
         android:textStyle="bold" />
 
     <TextView
@@ -21,12 +21,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="Total Balance"
+        android:text="Total"
         android:textColor="#8B949E"
-        android:textSize="9sp"
+        android:textSize="8sp"
         android:layout_marginBottom="6dp" />
 
-    <!-- Account rows -->
     <LinearLayout
         android:id="@+id/acc_row_1"
         android:layout_width="match_parent"
@@ -34,9 +33,9 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:visibility="gone"
-        android:layout_marginBottom="2dp">
-        <TextView android:id="@+id/acc_name_1" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="#8B949E" android:textSize="10sp" android:maxLines="1" android:ellipsize="end" />
-        <TextView android:id="@+id/acc_bal_1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#F0F6FC" android:textSize="10sp" android:textStyle="bold" />
+        android:layout_marginBottom="1dp">
+        <TextView android:id="@+id/acc_name_1" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="#8B949E" android:textSize="9sp" android:maxLines="1" android:ellipsize="end" />
+        <TextView android:id="@+id/acc_bal_1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#F0F6FC" android:textSize="9sp" android:textStyle="bold" />
     </LinearLayout>
 
     <LinearLayout
@@ -46,9 +45,9 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:visibility="gone"
-        android:layout_marginBottom="2dp">
-        <TextView android:id="@+id/acc_name_2" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="#8B949E" android:textSize="10sp" android:maxLines="1" android:ellipsize="end" />
-        <TextView android:id="@+id/acc_bal_2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#F0F6FC" android:textSize="10sp" android:textStyle="bold" />
+        android:layout_marginBottom="1dp">
+        <TextView android:id="@+id/acc_name_2" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="#8B949E" android:textSize="9sp" android:maxLines="1" android:ellipsize="end" />
+        <TextView android:id="@+id/acc_bal_2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#F0F6FC" android:textSize="9sp" android:textStyle="bold" />
     </LinearLayout>
 
     <LinearLayout
@@ -58,9 +57,9 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:visibility="gone"
-        android:layout_marginBottom="2dp">
-        <TextView android:id="@+id/acc_name_3" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="#8B949E" android:textSize="10sp" android:maxLines="1" android:ellipsize="end" />
-        <TextView android:id="@+id/acc_bal_3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#F0F6FC" android:textSize="10sp" android:textStyle="bold" />
+        android:layout_marginBottom="1dp">
+        <TextView android:id="@+id/acc_name_3" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="#8B949E" android:textSize="9sp" android:maxLines="1" android:ellipsize="end" />
+        <TextView android:id="@+id/acc_bal_3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#F0F6FC" android:textSize="9sp" android:textStyle="bold" />
     </LinearLayout>
 
     <LinearLayout
@@ -71,8 +70,8 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:visibility="gone">
-        <TextView android:id="@+id/acc_name_4" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="#8B949E" android:textSize="10sp" android:maxLines="1" android:ellipsize="end" />
-        <TextView android:id="@+id/acc_bal_4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#F0F6FC" android:textSize="10sp" android:textStyle="bold" />
+        <TextView android:id="@+id/acc_name_4" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="#8B949E" android:textSize="9sp" android:maxLines="1" android:ellipsize="end" />
+        <TextView android:id="@+id/acc_bal_4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#F0F6FC" android:textSize="9sp" android:textStyle="bold" />
     </LinearLayout>
 
 </LinearLayout>
