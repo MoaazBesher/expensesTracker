@@ -102,7 +102,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void _updateHomeWidget() {
     WidgetService.updateSummaryWidget(
       totalBalance: _totalBalance,
-      accounts: _accounts,
+      incomeTotal: _monthlyIncome,
+      expenseTotal: _monthlyExpenses,
     );
     WidgetService.updateRecentWidget(_recentTransactions);
     WidgetService.updateDebtsAlertsWidget(

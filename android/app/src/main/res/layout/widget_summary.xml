@@ -3,94 +3,55 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
+    android:padding="12dp"
     android:background="@drawable/widget_background">
 
-    <!-- Header -->
     <TextView
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Finance Summary"
         android:textColor="#F0F6FC"
-        android:textSize="13sp"
+        android:textSize="12sp"
         android:textStyle="bold" />
-
-    <!-- Total Balance -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:text="Total Balance"
-        android:textColor="#8B949E"
-        android:textSize="10sp" />
 
     <TextView
         android:id="@+id/total_balance"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center_vertical"
         android:text="$0.00"
         android:textColor="#F0F6FC"
-        android:textSize="22sp"
+        android:textSize="24sp"
         android:textStyle="bold" />
 
-    <!-- Divider -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1px"
-        android:background="#30363D"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp" />
-
-    <!-- Account 1 -->
     <LinearLayout
-        android:id="@+id/acc_row_1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:visibility="gone"
-        android:layout_marginBottom="4dp">
-        <TextView android:id="@+id/acc_name_1" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Account" android:textColor="#8B949E" android:textSize="12sp" />
-        <TextView android:id="@+id/acc_bal_1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$0" android:textColor="#F0F6FC" android:textSize="12sp" android:textStyle="bold" />
-    </LinearLayout>
+        android:orientation="horizontal">
 
-    <!-- Account 2 -->
-    <LinearLayout
-        android:id="@+id/acc_row_2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:visibility="gone"
-        android:layout_marginBottom="4dp">
-        <TextView android:id="@+id/acc_name_2" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Account" android:textColor="#8B949E" android:textSize="12sp" />
-        <TextView android:id="@+id/acc_bal_2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$0" android:textColor="#F0F6FC" android:textSize="12sp" android:textStyle="bold" />
-    </LinearLayout>
+        <TextView
+            android:id="@+id/income_tag"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:padding="4dp"
+            android:text="+$0"
+            android:textColor="#3FB950"
+            android:textSize="11sp"
+            android:textStyle="bold" />
 
-    <!-- Account 3 -->
-    <LinearLayout
-        android:id="@+id/acc_row_3"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:visibility="gone"
-        android:layout_marginBottom="4dp">
-        <TextView android:id="@+id/acc_name_3" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Account" android:textColor="#8B949E" android:textSize="12sp" />
-        <TextView android:id="@+id/acc_bal_3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$0" android:textColor="#F0F6FC" android:textSize="12sp" android:textStyle="bold" />
-    </LinearLayout>
-
-    <!-- Account 4 -->
-    <LinearLayout
-        android:id="@+id/acc_row_4"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:visibility="gone"
-        android:layout_marginBottom="4dp">
-        <TextView android:id="@+id/acc_name_4" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Account" android:textColor="#8B949E" android:textSize="12sp" />
-        <TextView android:id="@+id/acc_bal_4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="$0" android:textColor="#F0F6FC" android:textSize="12sp" android:textStyle="bold" />
+        <TextView
+            android:id="@+id/expense_tag"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:padding="4dp"
+            android:text="-$0"
+            android:textColor="#F85149"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:gravity="end" />
     </LinearLayout>
 
 </LinearLayout>
