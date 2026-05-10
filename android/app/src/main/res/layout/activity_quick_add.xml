@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="#161B22"
+    android:background="@drawable/dialog_background"
     android:padding="20dp">
 
     <!-- Title -->
@@ -21,7 +21,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:background="#0D1117"
+        android:background="@drawable/button_secondary"
         android:padding="3dp"
         android:gravity="center">
 
@@ -33,6 +33,7 @@
             android:text="Expense"
             android:textSize="12sp"
             android:textColor="#F85149"
+            android:textStyle="bold"
             android:backgroundTint="#F8514920"
             android:layout_marginEnd="2dp" />
 
@@ -59,17 +60,20 @@
         android:textSize="18sp"
         android:textStyle="bold"
         android:inputType="numberDecimal"
-        android:background="#0D1117"
-        android:padding="12dp"
+        android:background="@drawable/input_background"
+        android:padding="14dp"
         android:layout_marginTop="12dp" />
 
     <!-- Category Spinner -->
     <Spinner
         android:id="@+id/spinner_category"
         android:layout_width="match_parent"
-        android:layout_height="42dp"
-        android:background="#0D1117"
-        android:padding="10dp"
+        android:layout_height="44dp"
+        android:background="@drawable/input_background"
+        android:paddingStart="14dp"
+        android:paddingEnd="10dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
         android:popupBackground="#161B22"
         android:layout_marginTop="10dp" />
 
@@ -83,8 +87,8 @@
         android:textColorHint="#484F58"
         android:textSize="13sp"
         android:inputType="text"
-        android:background="#0D1117"
-        android:padding="12dp"
+        android:background="@drawable/input_background"
+        android:padding="14dp"
         android:layout_marginTop="10dp" />
 
     <!-- Buttons -->
@@ -97,24 +101,27 @@
         <Button
             android:id="@+id/btn_cancel"
             android:layout_width="0dp"
-            android:layout_height="42dp"
+            android:layout_height="44dp"
             android:layout_weight="1"
             android:text="Cancel"
             android:textColor="#8B949E"
             android:textSize="12sp"
-            android:backgroundTint="#21262D"
+            android:textStyle="bold"
+            android:background="@drawable/button_secondary"
+            android:backgroundTint="@null"
             android:layout_marginEnd="6dp" />
 
         <Button
             android:id="@+id/btn_save"
             android:layout_width="0dp"
-            android:layout_height="42dp"
+            android:layout_height="44dp"
             android:layout_weight="2"
             android:text="Save"
             android:textColor="#FFFFFF"
-            android:textSize="12sp"
+            android:textSize="13sp"
             android:textStyle="bold"
-            android:backgroundTint="#238636" />
+            android:background="@drawable/button_primary"
+            android:backgroundTint="@null" />
     </LinearLayout>
 
 </LinearLayout>

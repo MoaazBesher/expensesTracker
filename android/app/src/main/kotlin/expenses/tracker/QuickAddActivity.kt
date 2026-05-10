@@ -44,7 +44,7 @@ class QuickAddActivity : Activity() {
             } else {
                 btnExpense.setTextColor(Color.parseColor("#F85149"))
                 btnIncome.setTextColor(Color.parseColor("#8B949E"))
-                btnSave.text = "Add Expense"
+                btnSave.text = "Expenses Tracker"
             }
             updateSpinner()
         }
