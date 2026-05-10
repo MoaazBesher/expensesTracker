@@ -18,28 +18,36 @@ class ExpenseSummaryWidget : HomeWidgetProvider() {
             try {
                 val views = RemoteViews(context.packageName, R.layout.widget_summary)
 
-                val balance = widgetData.getString("total_balance", "0.00") ?: "0.00"
-                views.setTextViewText(R.id.total_balance, "$$balance")
+                views.setTextViewText(R.id.total_balance, "$" + (widgetData.getString("total_balance", "0.00") ?: "0.00"))
 
                 val accCount = widgetData.getInt("acc_count", 0)
 
-                val rowIds = intArrayOf(R.id.acc_row_1, R.id.acc_row_2, R.id.acc_row_3, R.id.acc_row_4)
-                val nameIds = intArrayOf(R.id.acc_name_1, R.id.acc_name_2, R.id.acc_name_3, R.id.acc_name_4)
-                val balIds = intArrayOf(R.id.acc_bal_1, R.id.acc_bal_2, R.id.acc_bal_3, R.id.acc_bal_4)
-
-                for (i in 0..3) {
-                    if (i < accCount) {
-                        views.setViewVisibility(rowIds[i], View.VISIBLE)
-                        views.setTextViewText(nameIds[i], widgetData.getString("acc_${i + 1}_name", "") ?: "")
-                        views.setTextViewText(balIds[i], "$" + (widgetData.getString("acc_${i + 1}_bal", "0") ?: "0"))
-                    } else {
-                        views.setViewVisibility(rowIds[i], View.GONE)
-                    }
-                }
+                setRow(views, widgetData, R.id.acc_row_1, R.id.acc_name_1, R.id.acc_bal_1, 1, accCount)
+                setRow(views, widgetData, R.id.acc_row_2, R.id.acc_name_2, R.id.acc_bal_2, 2, accCount)
+                setRow(views, widgetData, R.id.acc_row_3, R.id.acc_name_3, R.id.acc_bal_3, 3, accCount)
+                setRow(views, widgetData, R.id.acc_row_4, R.id.acc_name_4, R.id.acc_bal_4, 4, accCount)
 
                 appWidgetManager.updateAppWidget(widgetId, views)
             } catch (_: Exception) {
             }
+        }
+    }
+
+    private fun setRow(
+        views: RemoteViews,
+        data: SharedPreferences,
+        rowId: Int,
+        nameId: Int,
+        balId: Int,
+        index: Int,
+        count: Int
+    ) {
+        if (index <= count) {
+            views.setViewVisibility(rowId, View.VISIBLE)
+            views.setTextViewText(nameId, data.getString("acc_${index}_name", "") ?: "")
+            views.setTextViewText(balId, "$" + (data.getString("acc_${index}_bal", "0") ?: "0"))
+        } else {
+            views.setViewVisibility(rowId, View.GONE)
         }
     }
 }
