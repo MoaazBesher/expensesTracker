@@ -1,20 +1,24 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../services/firebase_service.dart';
+import '../services/native_pending_sync.dart';
 import '../services/storage_service.dart';
 import '../services/widget_service.dart';
 import '../models/account_model.dart';
 import '../utils/app_theme.dart';
 import '../utils/screen_utils.dart';
+import '../utils/offline_transactions_merge.dart';
 import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final ValueChanged<int>? onNavigateTab;
+  const HomeScreen({super.key, this.onNavigateTab});
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreen> createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> {
   final DateTime _currentMonth = DateTime.now();
   double _totalBalance = 0.0;
   List<AccountModel> _accounts = [];
@@ -25,6 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
   double _totalIOwe = 0.0;
   double _totalOwedMe = 0.0;
   int _alertsCount = 0;
+  StreamSubscription<List<Map<String, dynamic>>>? _mergedTxSub;
 
   @override
   void initState() {
@@ -32,55 +37,29 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadDashboardData();
   }
 
+  @override
+  void dispose() {
+    _mergedTxSub?.cancel();
+    super.dispose();
+  }
+
+  /// Reserved for nested UI (filters, sheets); shell handles most back cases.
+  bool tryHandleAndroidBack() => false;
+
   Future<void> _loadDashboardData() async {
-    await _syncPendingTransactions();
+    await NativePendingSync.syncQuickAddQueue();
+    if (await FirebaseService().isConnected) {
+      await StorageService.syncAllLocalData();
+    }
     await _loadAccountsWithOfflineSupport();
-    await _loadMonthlySummaryWithOfflineSupport();
-    await _loadRecentTransactionsWithOfflineSupport();
+    _loadMonthlyAndRecentMerged();
     _loadStatsForWidgets();
   }
 
-  static bool _isSyncing = false;
-
-  /// Sync any pending transactions saved from the native Quick Add dialog
-  Future<void> _syncPendingTransactions() async {
-    if (_isSyncing) return; // Prevent duplicate runs
-    _isSyncing = true;
-
-    try {
-      const channel = MethodChannel('expenses.tracker/pending');
-      final result = await channel.invokeMethod<Map>('getPending');
-      if (result == null) { _isSyncing = false; return; }
-
-      final prefs = Map<String, dynamic>.from(result);
-      final count = prefs['count'] as int? ?? 0;
-      if (count == 0) { _isSyncing = false; return; }
-
-      // Clear FIRST to prevent duplicates on re-entry
-      await channel.invokeMethod('clearPending');
-
-      // Now sync to Firebase
-      final firebaseService = FirebaseService();
-      for (int i = 1; i <= count; i++) {
-        final type = prefs['txn_${i}_type'] as String? ?? 'expense';
-        final amount = double.tryParse(prefs['txn_${i}_amount']?.toString() ?? '0') ?? 0;
-        final category = prefs['txn_${i}_category'] as String? ?? 'Other';
-        final note = prefs['txn_${i}_note'] as String? ?? '';
-
-        if (amount > 0) {
-          await firebaseService.addTransaction(
-            type: type,
-            amount: amount,
-            category: category,
-            date: DateTime.now(),
-            accountId: '',
-            note: note,
-          );
-        }
-      }
-    } catch (_) {}
-
-    _isSyncing = false;
+  /// Re-subscribe merged month stream (e.g. after Quick Add → SQLite + cloud sync).
+  void refreshMergedTransactions() {
+    if (!mounted) return;
+    _loadMonthlyAndRecentMerged();
   }
 
   Future<void> _loadAccountsWithOfflineSupport() async {
@@ -128,54 +107,47 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     FirebaseService().getReminders().listen((reminders) {
       if (mounted) {
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+        final upcoming = reminders.where((r) {
+          final d = DateTime.parse(r['date']);
+          final rd = DateTime(d.year, d.month, d.day);
+          return rd.isAfter(today) || rd == today;
+        }).toList()..sort((a, b) => DateTime.parse(a['date']).compareTo(DateTime.parse(b['date'])));
+
         setState(() {
           _alertsCount = reminders.length;
-          _recentAlerts = reminders.take(2).toList();
+          _recentAlerts = upcoming.take(1).toList();
         });
         _updateHomeWidget();
       }
     });
   }
 
-  Future<void> _loadMonthlySummaryWithOfflineSupport() async {
-    try {
-      FirebaseService().getMonthlyTransactions(_currentMonth).listen((txns) {
-        double inc = 0, exp = 0;
-        for (var t in txns) {
-          final a = double.tryParse(t['amount']?.toString() ?? '0') ?? 0;
-          if (t['type'] == 'income') { inc += a; } else { exp += a; }
-        }
-        if (mounted) {
-          setState(() { _monthlyIncome = inc; _monthlyExpenses = exp; });
-          _updateHomeWidget();
-        }
-      });
-    } catch (e) {
-      final txns = await StorageService.getLocalTransactions(_currentMonth);
+  void _loadMonthlyAndRecentMerged() {
+    _mergedTxSub?.cancel();
+    _mergedTxSub =
+        FirebaseService().getMonthlyTransactions(_currentMonth).listen((txns) async {
+      final merged =
+          await mergeFirebaseMonthWithPendingLocal(txns, _currentMonth);
       double inc = 0, exp = 0;
-      for (var t in txns) {
+      for (var t in merged) {
         final a = double.tryParse(t['amount']?.toString() ?? '0') ?? 0;
-        if (t['type'] == 'income') { inc += a; } else { exp += a; }
-      }
-      if (mounted) setState(() { _monthlyIncome = inc; _monthlyExpenses = exp; });
-    }
-  }
-
-  Future<void> _loadRecentTransactionsWithOfflineSupport() async {
-    try {
-      FirebaseService().getMonthlyTransactions(_currentMonth).listen((txns) {
-        if (mounted) {
-          setState(() => _recentTransactions = txns.take(5).toList());
-          _updateHomeWidget();
+        if (t['type'] == 'income') {
+          inc += a;
+        } else {
+          exp += a;
         }
-      });
-    } catch (e) {
-      final txns = await StorageService.getLocalTransactions(_currentMonth);
+      }
       if (mounted) {
-        setState(() => _recentTransactions = txns.take(5).toList());
+        setState(() {
+          _monthlyIncome = inc;
+          _monthlyExpenses = exp;
+          _recentTransactions = merged.take(5).toList();
+        });
         _updateHomeWidget();
       }
-    }
+    });
   }
 
   @override
@@ -191,84 +163,139 @@ class _HomeScreenState extends State<HomeScreen> {
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
           slivers: [
-            // ── Total Balance Card ──────────────────────────────────────
+            // ── Premium Hero Card (Balance & Monthly Summary) ───────────
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppTheme.primary.withValues(alpha: 0.15),
-                        AppTheme.primary.withValues(alpha: 0.04),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: AppTheme.primary.withValues(alpha: 0.25), width: 1),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            'Total Balance',
-                            style: TextStyle(color: AppTheme.textDim, fontSize: 13, fontWeight: FontWeight.w500),
-                          ),
-                          const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppTheme.primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              monthLabel,
-                              style: const TextStyle(color: AppTheme.primary, fontSize: 11, fontWeight: FontWeight.w600),
-                            ),
-                          ),
+              child: GestureDetector(
+                onTap: () => widget.onNavigateTab?.call(4), // Tap hero to go to Reports
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppTheme.primary,
+                          AppTheme.primary.withValues(alpha: 0.8),
                         ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        '\$${_totalBalance.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          color: AppTheme.textMain,
-                          fontSize: 34,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.5,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.primary.withValues(alpha: 0.3),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
                         ),
-                      ),
-                      const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          _buildMiniTag(Icons.trending_up_rounded, '+\$${_monthlyIncome.toStringAsFixed(0)}', AppTheme.income),
-                          const SizedBox(width: 10),
-                          _buildMiniTag(Icons.trending_down_rounded, '-\$${_monthlyExpenses.toStringAsFixed(0)}', AppTheme.expense),
-                        ],
-                      ),
-                    ],
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Total Balance',
+                              style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                monthLabel,
+                                style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '\$${_totalBalance.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 36,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), shape: BoxShape.circle),
+                                        child: const Icon(Icons.arrow_downward_rounded, size: 12, color: Colors.greenAccent),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      const Text('Income', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text('\$${_monthlyIncome.toStringAsFixed(0)}', style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                            ),
+                            Container(width: 1, height: 35, color: Colors.white.withValues(alpha: 0.2)),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), shape: BoxShape.circle),
+                                        child: const Icon(Icons.arrow_upward_rounded, size: 12, color: Colors.redAccent),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      const Text('Expenses', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text('\$${_monthlyExpenses.toStringAsFixed(0)}', style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
 
-            // ── Accounts section label ──────────────────────────────────
+            // ── Upcoming Alert ──────────────────────────────────────────
+            if (_recentAlerts.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                  child: _buildUpcomingAlertCard(_recentAlerts.first),
+                ),
+              ),
+
+            // ── My Accounts ─────────────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-                child: _sectionHeader('Accounts'),
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+                child: _sectionHeader('My Accounts', onTap: () => widget.onNavigateTab?.call(2)),
               ),
             ),
-
-            // ── Accounts horizontal list ────────────────────────────────
             SliverToBoxAdapter(
               child: SizedBox(
-                height: 110,
+                height: 120,
                 child: _accounts.isEmpty
                     ? _buildAccountsEmpty()
                     : ListView.builder(
@@ -281,11 +308,11 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // ── Monthly Summary ─────────────────────────────────────────
+            // ── Debts Overview ──────────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-                child: _sectionHeader('Finance Summary'),
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+                child: _sectionHeader('Debts Overview', onTap: () => widget.onNavigateTab?.call(3)),
               ),
             ),
             SliverToBoxAdapter(
@@ -293,30 +320,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
                   children: [
-                    Expanded(child: _buildSummaryCard('Income', _monthlyIncome, Icons.add_circle_rounded, AppTheme.income)),
+                    Expanded(child: _buildSummaryCard('I Owe', _totalIOwe, Icons.upload_rounded, AppTheme.expense, onTap: () => widget.onNavigateTab?.call(3))),
                     const SizedBox(width: 12),
-                    Expanded(child: _buildSummaryCard('Expenses', _monthlyExpenses, Icons.remove_circle_rounded, AppTheme.expense)),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildSummaryCard(
-                      'Saved',
-                      _monthlyIncome - _monthlyExpenses,
-                      Icons.savings_rounded,
-                      AppTheme.primary,
-                    )),
+                    Expanded(child: _buildSummaryCard('Owed to Me', _totalOwedMe, Icons.download_rounded, AppTheme.income, onTap: () => widget.onNavigateTab?.call(3))),
                   ],
                 ),
               ),
             ),
 
-            // ── Recent Transactions header ──────────────────────────────
+            // ── Recent Activity ─────────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-                child: _sectionHeader('Recent Activity'),
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+                child: _sectionHeader('Recent Activity', onTap: () => widget.onNavigateTab?.call(1)),
               ),
             ),
-
-            // ── Recent Transactions list ────────────────────────────────
             _recentTransactions.isEmpty
                 ? SliverToBoxAdapter(child: _buildTransactionsEmpty())
                 : SliverPadding(
@@ -329,29 +347,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
 
-            // ── Debts & Alerts ───────────────────────────────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-                child: _sectionHeader('Debts & Alerts'),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: [
-                    Expanded(child: _buildSummaryCard('I Owe', _totalIOwe, Icons.arrow_upward_rounded, AppTheme.expense)),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildSummaryCard('Owed to Me', _totalOwedMe, Icons.arrow_downward_rounded, AppTheme.income)),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildSummaryCard('Alerts', _alertsCount.toDouble(), Icons.notifications_rounded, AppTheme.accent, isCurrency: false)),
-                  ],
-                ),
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            const SliverToBoxAdapter(child: SizedBox(height: 32)),
           ],
         ),
       ),
@@ -360,8 +356,58 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
-  Widget _sectionHeader(String title) {
-    return Text(
+  Widget _buildUpcomingAlertCard(Map<String, dynamic> r) {
+    final date = DateTime.parse(r['date']);
+    final isToday = DateTime(date.year, date.month, date.day) == DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    
+    return GestureDetector(
+      onTap: () => widget.onNavigateTab?.call(5),
+      child: Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.accent.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.accent.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: AppTheme.accent.withValues(alpha: 0.15), shape: BoxShape.circle),
+            child: const Icon(Icons.notifications_active_rounded, color: AppTheme.accent, size: 22),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isToday ? 'Today' : 'Upcoming Alert',
+                  style: const TextStyle(color: AppTheme.accent, fontSize: 11, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  r['title'] ?? 'Alert',
+                  style: const TextStyle(color: AppTheme.textMain, fontSize: 15, fontWeight: FontWeight.w600),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  DateFormat('EEE, MMM dd • hh:mm a').format(date),
+                  style: const TextStyle(color: AppTheme.textDim, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+    );
+  }
+
+  Widget _sectionHeader(String title, {VoidCallback? onTap}) {
+    final header = Text(
       title,
       style: const TextStyle(
         color: AppTheme.textMain,
@@ -370,30 +416,39 @@ class _HomeScreenState extends State<HomeScreen> {
         letterSpacing: 0.1,
       ),
     );
-  }
 
-  Widget _buildMiniTag(IconData icon, String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: color),
-          const SizedBox(width: 5),
-          Text(text, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w700)),
-        ],
-      ),
+    if (onTap == null) return header;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        header,
+        GestureDetector(
+          onTap: onTap,
+          behavior: HitTestBehavior.opaque,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('See All', style: TextStyle(color: AppTheme.primary, fontSize: 12, fontWeight: FontWeight.w600)),
+                const SizedBox(width: 4),
+                const Icon(Icons.arrow_forward_ios_rounded, size: 10, color: AppTheme.primary),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
+
+
   Widget _buildAccountCard(AccountModel account) {
     final isVisa = account.type.toLowerCase().contains('visa');
-    return Container(
+    return GestureDetector(
+      onTap: () => widget.onNavigateTab?.call(2),
+      child: Container(
       width: 130,
       height: double.infinity,
       margin: const EdgeInsets.only(right: 10),
@@ -433,12 +488,15 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 
-  Widget _buildSummaryCard(String title, double amount, IconData icon, Color color, {bool isCurrency = true}) {
+  Widget _buildSummaryCard(String title, double amount, IconData icon, Color color, {bool isCurrency = true, VoidCallback? onTap}) {
     final isNegative = amount < 0;
-    return Container(
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
       padding: const EdgeInsets.all(14),
       decoration: AppTheme.cardDecoration(radius: 14),
       child: Column(
@@ -465,6 +523,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 
@@ -472,7 +531,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final isIncome = t['type'] == 'income';
     final amount = double.tryParse(t['amount']?.toString() ?? '0') ?? 0.0;
     final color = isIncome ? AppTheme.income : AppTheme.expense;
-    return Container(
+    return GestureDetector(
+      onTap: () => widget.onNavigateTab?.call(1),
+      child: Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: AppTheme.cardDecoration(radius: 12),
@@ -510,12 +571,25 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          Text(
-            '${isIncome ? '+' : '-'}\$${amount.toStringAsFixed(0)}',
-            style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 14),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (t['pendingSync'] == true) ...[
+                Tooltip(
+                  message: 'Pending upload',
+                  child: Icon(Icons.cloud_queue_rounded, size: 15, color: AppTheme.textDim.withValues(alpha: 0.85)),
+                ),
+                const SizedBox(width: 6),
+              ],
+              Text(
+                '${isIncome ? '+' : '-'}\$${amount.toStringAsFixed(0)}',
+                style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 14),
+              ),
+            ],
           ),
         ],
       ),
+    ),
     );
   }
 

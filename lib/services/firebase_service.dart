@@ -33,8 +33,14 @@ class FirebaseService {
     required String accountId,
     String note = '',
     int? localId,
+    /// When set (e.g. replaying an offline save), stored instead of server time so the record reflects the real moment.
+    DateTime? clientCreatedAt,
   }) async {
     if (_currentUser == null) return;
+
+    final Object createdAtValue = clientCreatedAt != null
+        ? Timestamp.fromDate(clientCreatedAt)
+        : FieldValue.serverTimestamp();
 
     final transactionData = {
       'type': type,
@@ -43,7 +49,7 @@ class FirebaseService {
       'date': date.toIso8601String(),
       'accountId': accountId,
       'note': note,
-      'createdAt': FieldValue.serverTimestamp(),
+      'createdAt': createdAtValue,
     };
 
     if (await isConnected) {
@@ -331,6 +337,10 @@ class FirebaseService {
           for (var doc in snapshot.docs) {
             final data = doc.data();
             data['id'] = doc.id;
+            // Convert Timestamp to ISO string so the UI can safely parse it
+            if (data['createdAt'] is Timestamp) {
+              data['createdAt'] = (data['createdAt'] as Timestamp).toDate().toIso8601String();
+            }
             if (data['debtType'] == 'iOwe') {
               debts['iOwe'].add(data);
             } else {
@@ -339,6 +349,27 @@ class FirebaseService {
           }
           return debts;
         });
+  }
+
+  Future<void> updateDebt({
+    required String debtId,
+    required String person,
+    required double amount,
+    required String notes,
+  }) async {
+    if (_currentUser == null) return;
+    if (await isConnected) {
+      await _firestore
+          .collection('users')
+          .doc(_currentUser)
+          .collection('debts')
+          .doc(debtId)
+          .update({
+        'person': person,
+        'amount': amount,
+        'notes': notes,
+      });
+    }
   }
 
   Future<void> deleteDebt(String debtId) async {

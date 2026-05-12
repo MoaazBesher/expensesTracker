@@ -1,19 +1,21 @@
-# Flutter
+# Flutter / Dart
 **/doc/api/
 .dart_tool/
+.flutter-plugins
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
 build/
 coverage/
+*.lock
 
 # Android
-/android/app/debug
-/android/app/profile
-/android/app/release
 *.jks
 *.keystore
 android/key.properties
+android/app/debug/
+android/app/profile/
+android/app/release/
 
 # iOS / macOS
 **/ios/Flutter/.last_build_id
@@ -27,6 +29,8 @@ lib/utils/firebase_config.dart
 # Environment
 .env
 .env.*
+.env.local
+.env.production
 
 # IDE
 .idea/
@@ -41,7 +45,12 @@ lib/utils/firebase_config.dart
 *.class
 *.log
 *.pyc
+Thumbs.db
+Desktop.ini
 
 # Symbolication / Obfuscation
 app.*.symbols
 app.*.map.json
+
+# Temp
+/tmp/

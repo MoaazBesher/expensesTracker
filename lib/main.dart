@@ -13,11 +13,14 @@ import 'screens/accounts_screen.dart';
 import 'screens/monthly_bills_screen.dart';
 import 'services/auth_service.dart';
 import 'services/firebase_service.dart';
+import 'services/native_pending_sync.dart';
+import 'services/storage_service.dart';
 import 'services/widget_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'utils/app_theme.dart';
 import 'utils/screen_utils.dart';
 import 'utils/firebase_config.dart';
+import 'app_navigator.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,6 +34,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     S.init(context);
     return MaterialApp(
+      navigatorKey: appRootNavigatorKey,
       title: 'Expenses Tracker',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
@@ -180,44 +184,145 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObserver {
   int _currentIndex = 0;
+  final List<int> _navBackStack = [];
+  DateTime? _lastExitPromptAt;
   bool _isOnline = true;
   late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
 
   // GlobalKeys to control child screens
+  final GlobalKey<HomeScreenState> _homeKey = GlobalKey<HomeScreenState>();
   final GlobalKey<TransactionsScreenState> _transactionsKey = GlobalKey<TransactionsScreenState>();
   final GlobalKey<RemindersScreenState> _remindersKey = GlobalKey<RemindersScreenState>();
   final GlobalKey<DebtsScreenState> _debtsKey = GlobalKey<DebtsScreenState>();
 
   // ── Screens list (order matches _navItems) ──────────────────────────────
   late final List<Widget> _screens = [
-    const HomeScreen(),
-    const AccountsScreen(),
+    HomeScreen(key: _homeKey, onNavigateTab: _goToTab),
     TransactionsScreen(key: _transactionsKey),
+    const AccountsScreen(),
+    DebtsScreen(key: _debtsKey),
     const MonthlyBillsScreen(),
     RemindersScreen(key: _remindersKey),
-    DebtsScreen(key: _debtsKey),
   ];
 
   static const List<_NavItem> _navItems = [
     _NavItem(label: 'Home',     icon: Icons.dashboard_outlined,              activeIcon: Icons.dashboard_rounded),
-    _NavItem(label: 'Sources',  icon: Icons.account_balance_wallet_outlined, activeIcon: Icons.account_balance_wallet_rounded),
     _NavItem(label: 'Activity', icon: Icons.swap_vert_circle_outlined,       activeIcon: Icons.swap_vert_circle_rounded),
+    _NavItem(label: 'Sources',  icon: Icons.account_balance_wallet_outlined, activeIcon: Icons.account_balance_wallet_rounded),
+    _NavItem(label: 'Debts',    icon: Icons.savings_outlined,                activeIcon: Icons.savings_rounded),
     _NavItem(label: 'Reports',  icon: Icons.bar_chart_outlined,              activeIcon: Icons.bar_chart_rounded),
     _NavItem(label: 'Alerts',   icon: Icons.notifications_outlined,          activeIcon: Icons.notifications_active_rounded),
-    _NavItem(label: 'Debts',    icon: Icons.savings_outlined,                activeIcon: Icons.savings_rounded),
   ];
 
   // page titles matching _navItems order
   static const List<String> _pageTitles = [
     'Dashboard',
-    'Money Sources',
     'Transactions',
+    'Money Sources',
+    'Debts',
     'Monthly Report',
     'Reminders',
-    'Debts',
   ];
 
   static const _deepLinkChannel = MethodChannel('expenses.tracker/deeplink');
+
+  void _goToTab(int index) {
+    if (index == _currentIndex) return;
+    setState(() {
+      _lastExitPromptAt = null;
+      // Remove index if it already exists to prevent duplicate back-loops
+      _navBackStack.remove(index);
+      _navBackStack.add(_currentIndex);
+      _currentIndex = index;
+    });
+  }
+
+  bool _popTabHistory() {
+    if (_navBackStack.isEmpty) return false;
+    setState(() => _currentIndex = _navBackStack.removeLast());
+    return true;
+  }
+
+
+  bool _tryActiveTabChildBack() {
+    switch (_currentIndex) {
+      case 0:
+        return _homeKey.currentState?.tryHandleAndroidBack() ?? false;
+      case 1:
+        return _transactionsKey.currentState?.tryHandleAndroidBack() ?? false;
+      case 3:
+        return _debtsKey.currentState?.tryHandleAndroidBack() ?? false;
+      case 5:
+        return _remindersKey.currentState?.tryHandleAndroidBack() ?? false;
+      default:
+        return false;
+    }
+  }
+
+  void _handleAndroidBack() {
+    if (!mounted) return;
+
+    // 1. Dismiss any open bottom sheet / dialog (modal route on the local navigator)
+    final localNav = Navigator.of(context);
+    if (localNav.canPop()) {
+      localNav.pop();
+      _lastExitPromptAt = null;
+      return;
+    }
+
+    // 2. Let the active tab handle internal back (e.g. selection mode, sub-tabs)
+    if (_tryActiveTabChildBack()) {
+      _lastExitPromptAt = null;
+      return;
+    }
+
+
+    // 4. Navigate back through tab history
+    if (_popTabHistory()) {
+      _lastExitPromptAt = null;
+      return;
+    }
+
+    // 5. Double-tap back to exit
+    final now = DateTime.now();
+    if (_lastExitPromptAt != null &&
+        now.difference(_lastExitPromptAt!) < const Duration(seconds: 2)) {
+      SystemNavigator.pop();
+      return;
+    }
+    _lastExitPromptAt = now;
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    messenger?.clearSnackBars();
+    messenger?.showSnackBar(
+      SnackBar(
+        content: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(color: AppTheme.accent.withValues(alpha: 0.15), shape: BoxShape.circle),
+              child: const Icon(Icons.exit_to_app_rounded, color: AppTheme.accent, size: 16),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'Press back again to exit',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textMain),
+            ),
+          ],
+        ),
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(40, 0, 40, 88),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
+          side: BorderSide(color: AppTheme.accent.withValues(alpha: 0.3), width: 1),
+        ),
+        backgroundColor: AppTheme.surface.withValues(alpha: 0.95),
+        elevation: 8,
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -251,7 +356,19 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _handleInitialDeepLink(); // Re-check on resume
+      _flushQuickAddAndRefreshTabs();
     }
+  }
+
+  /// Native Quick Add may run while the Flutter UI is in background; drain queue then refresh lists.
+  Future<void> _flushQuickAddAndRefreshTabs() async {
+    await NativePendingSync.syncQuickAddQueue();
+    if (await FirebaseService().isConnected) {
+      await StorageService.syncAllLocalData();
+    }
+    if (!mounted) return;
+    _transactionsKey.currentState?.reloadAfterSync();
+    _homeKey.currentState?.refreshMergedTransactions();
   }
 
   Future<void> _handleInitialDeepLink() async {
@@ -265,16 +382,16 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (uriString.contains('add_income')) {
-        setState(() => _currentIndex = 2);
+        _goToTab(2);
         _triggerAction(() => _transactionsKey.currentState?.showAddSheet(true));
       } else if (uriString.contains('add_expense')) {
-        setState(() => _currentIndex = 2);
+        _goToTab(2);
         _triggerAction(() => _transactionsKey.currentState?.showAddSheet(false));
       } else if (uriString.contains('add_alert')) {
-        setState(() => _currentIndex = 4);
+        _goToTab(4);
         _triggerAction(() => _remindersKey.currentState?.showAddSheet());
       } else if (uriString.contains('add_debt')) {
-        setState(() => _currentIndex = 5);
+        _goToTab(5);
         _triggerAction(() => _debtsKey.currentState?.showAddSheet());
       } else if (uriString.contains('quick_add')) {
         _triggerAction(() => _showQuickAddOverlay());
@@ -509,11 +626,35 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
   }
 
   void _initConnectivity() {
+    Connectivity().checkConnectivity().then((results) {
+      final online =
+          results.isNotEmpty && results.any((r) => r != ConnectivityResult.none);
+      setState(() => _isOnline = online);
+      if (online) {
+        NativePendingSync.syncQuickAddQueue().then((_) async {
+          await StorageService.syncAllLocalData();
+          if (!mounted) return;
+          _transactionsKey.currentState?.reloadAfterSync();
+          _homeKey.currentState?.refreshMergedTransactions();
+        });
+      }
+    });
     _connectivitySubscription = Connectivity().onConnectivityChanged.listen(
       (List<ConnectivityResult> results) {
+        final wasOnline = _isOnline;
+        final online = results.isNotEmpty &&
+            results.any((r) => r != ConnectivityResult.none);
         setState(() {
-          _isOnline = results.isNotEmpty && results.any((r) => r != ConnectivityResult.none);
+          _isOnline = online;
         });
+        if (online && !wasOnline) {
+          NativePendingSync.syncQuickAddQueue().then((_) async {
+            await StorageService.syncAllLocalData();
+            if (!mounted) return;
+            _transactionsKey.currentState?.reloadAfterSync();
+            _homeKey.currentState?.refreshMergedTransactions();
+          });
+        }
       },
     );
   }
@@ -521,7 +662,13 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
   @override
   Widget build(BuildContext context) {
     S.init(context);
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, Object? result) {
+        if (didPop) return;
+        _handleAndroidBack();
+      },
+      child: Scaffold(
       backgroundColor: AppTheme.background,
       // ── App Bar ────────────────────────────────────────────────────────
       appBar: AppBar(
@@ -593,6 +740,7 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
       ),
       // ── Bottom Navigation Bar ──────────────────────────────────────────
       bottomNavigationBar: _buildBottomNav(),
+      ),
     );
   }
 
@@ -627,7 +775,7 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
     final isSelected = _currentIndex == index;
     final item = _navItems[index];
     return GestureDetector(
-      onTap: () => setState(() => _currentIndex = index),
+      onTap: () => _goToTab(index),
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),

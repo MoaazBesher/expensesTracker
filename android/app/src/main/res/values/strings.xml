@@ -5,4 +5,10 @@
     <string name="widget_recent_desc">Shows your last 3 transactions</string>
     <string name="widget_debts_desc">Summary of what you owe and active alerts</string>
     <string name="tile_label">Add Expense</string>
+    <string name="quick_add_save_expense">Add expense</string>
+    <string name="quick_add_save_income">Add income</string>
+    <string name="quick_add_toast_expense">Expense saved</string>
+    <string name="quick_add_toast_income">Income saved</string>
+    <string name="quick_add_amount_error">Enter a valid amount</string>
+    <string name="quick_add_save_error">Could not save. Try again.</string>
 </resources>

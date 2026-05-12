@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../app_navigator.dart';
 import '../services/auth_service.dart';
 import '../utils/app_theme.dart';
 import '../utils/screen_utils.dart';
@@ -13,6 +14,60 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final AuthService _authService = AuthService();
   bool _isLoading = false;
+  DateTime? _lastExitPromptAt;
+
+  void _handleAndroidBack() {
+    if (!mounted) return;
+    final root = appRootNavigatorKey.currentState;
+    if (root != null && root.canPop()) {
+      root.pop();
+      _lastExitPromptAt = null;
+      return;
+    }
+    if (FocusManager.instance.primaryFocus?.hasFocus == true) {
+      FocusManager.instance.primaryFocus?.unfocus();
+      _lastExitPromptAt = null;
+      return;
+    }
+    final now = DateTime.now();
+    if (_lastExitPromptAt != null &&
+        now.difference(_lastExitPromptAt!) < const Duration(seconds: 2)) {
+      SystemNavigator.pop();
+      return;
+    }
+    _lastExitPromptAt = now;
+    ScaffoldMessenger.maybeOf(context)
+      ?..clearSnackBars()
+      ..showSnackBar(
+        SnackBar(
+          content: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(color: AppTheme.accent.withValues(alpha: 0.15), shape: BoxShape.circle),
+                child: const Icon(Icons.exit_to_app_rounded, color: AppTheme.accent, size: 16),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'Press back again to exit',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textMain),
+              ),
+            ],
+          ),
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.fromLTRB(40, 0, 40, 24),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+            side: BorderSide(color: AppTheme.accent.withValues(alpha: 0.3), width: 1),
+          ),
+          backgroundColor: AppTheme.surface.withValues(alpha: 0.95),
+          elevation: 8,
+        ),
+      );
+  }
 
   void _signInWithGoogle() async {
     setState(() => _isLoading = true);
@@ -38,7 +93,13 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     S.init(context);
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, Object? result) {
+        if (didPop) return;
+        _handleAndroidBack();
+      },
+      child: Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(
         child: Center(
@@ -91,6 +152,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 }

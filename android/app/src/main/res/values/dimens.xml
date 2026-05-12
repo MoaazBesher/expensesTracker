@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="quick_add_padding_h">20dp</dimen>
+    <dimen name="quick_add_padding_v">18dp</dimen>
+    <dimen name="quick_add_field_spacing">12dp</dimen>
+    <dimen name="quick_add_touch_min">48dp</dimen>
+    <dimen name="quick_add_corner_card">20dp</dimen>
+    <dimen name="quick_add_corner_field">12dp</dimen>
+</resources>

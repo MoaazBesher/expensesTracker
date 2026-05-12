@@ -131,6 +131,7 @@ class StorageService {
     );
 
     return transactions.map((map) {
+      final synced = (map['is_synced'] as int? ?? 0) == 1;
       return {
         'id': 'local_${map['id']}',
         'type': map['type'] as String,
@@ -141,6 +142,7 @@ class StorageService {
         'note': map['note'] as String? ?? '',
         'createdAt': map['created_at'] as String,
         'isLocal': true,
+        'pendingSync': !synced,
       };
     }).toList();
   }
@@ -167,6 +169,38 @@ class StorageService {
         'createdAt': map['created_at'] as String,
       };
     }).toList();
+  }
+
+  /// Delete a row from local transactions (e.g. user deleted a pending item).
+  static Future<void> deleteLocalTransaction(int localId) async {
+    await init();
+    await _database!.delete(
+      'transactions',
+      where: 'id = ?',
+      whereArgs: [localId],
+    );
+  }
+
+  /// Update a pending (not yet synced) local transaction.
+  static Future<void> updateLocalTransaction(
+    int localId, {
+    required double amount,
+    required String category,
+    required String dateIso,
+    required String note,
+  }) async {
+    await init();
+    await _database!.update(
+      'transactions',
+      {
+        'amount': amount,
+        'category': category,
+        'date': dateIso,
+        'note': note,
+      },
+      where: 'id = ? AND is_synced = ?',
+      whereArgs: [localId, 0],
+    );
   }
 
   /// Mark transaction as synced
@@ -259,6 +293,16 @@ class StorageService {
     );
   }
 
+  /// Delete a local-only reminder row (e.g. unsynced or before cloud delete).
+  static Future<void> deleteLocalReminder(int localId) async {
+    await init();
+    await _database!.delete(
+      'reminders',
+      where: 'id = ?',
+      whereArgs: [localId],
+    );
+  }
+
   // ============ DEBT METHODS ============ //
 
   /// Save debt locally
@@ -277,12 +321,14 @@ class StorageService {
     });
   }
 
-  /// Get local debts
+  /// Get local debts (only unsynced ones for UI merging)
   static Future<Map<String, List<Map<String, dynamic>>>> getLocalDebts() async {
     await init();
     
     final debts = await _database!.query(
       'debts',
+      where: 'is_synced = ?',
+      whereArgs: [0],
       orderBy: 'created_at DESC',
     );
 
@@ -294,12 +340,14 @@ class StorageService {
     for (final debt in debts) {
       final debtMap = {
         'id': 'local_${debt['id']}',
+        'debtType': debt['debt_type'] as String,
         'amount': (debt['amount'] as double).toString(),
         'person': debt['person'] as String,
         'dueDate': debt['due_date'] as String?,
         'notes': debt['notes'] as String? ?? '',
         'createdAt': debt['created_at'] as String,
         'isLocal': true,
+        'pendingSync': true,
       };
 
       if (debt['debt_type'] == 'iOwe') {
@@ -348,6 +396,36 @@ class StorageService {
       },
       where: 'id = ?',
       whereArgs: [localId],
+    );
+  }
+
+  /// Delete a local debt row
+  static Future<void> deleteLocalDebt(int localId) async {
+    await init();
+    await _database!.delete(
+      'debts',
+      where: 'id = ?',
+      whereArgs: [localId],
+    );
+  }
+
+  /// Update a pending (unsynced) local debt
+  static Future<void> updateLocalDebt(
+    int localId, {
+    required String person,
+    required double amount,
+    required String notes,
+  }) async {
+    await init();
+    await _database!.update(
+      'debts',
+      {
+        'person': person,
+        'amount': amount,
+        'notes': notes,
+      },
+      where: 'id = ? AND is_synced = ?',
+      whereArgs: [localId, 0],
     );
   }
 
@@ -448,10 +526,11 @@ class StorageService {
           type: t['type'],
           amount: t['amount'],
           category: t['category'],
-          date: DateTime.parse(t['date']),
-          accountId: t['accountId'],
-          note: t['note'],
+          date: DateTime.parse(t['date'] as String),
+          accountId: t['accountId'] as String,
+          note: t['note'] as String,
           localId: t['id'] as int,
+          clientCreatedAt: DateTime.tryParse(t['createdAt'] as String? ?? ''),
         );
       } catch (e) {
         debugPrint('❌ Transaction sync failed: $e');

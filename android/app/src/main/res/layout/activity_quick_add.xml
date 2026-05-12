@@ -1,127 +1,200 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:background="@drawable/dialog_background"
-    android:padding="20dp">
+    android:fillViewport="true"
+    android:overScrollMode="never"
+    android:scrollbars="none"
+    android:clipToPadding="false"
+    android:paddingStart="12dp"
+    android:paddingEnd="12dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
 
-    <!-- Title -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Quick Add"
-        android:textColor="#F0F6FC"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="16dp" />
-
-    <!-- Type Toggle -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:background="@drawable/button_secondary"
-        android:padding="3dp"
-        android:gravity="center">
+        android:orientation="vertical"
+        android:background="@drawable/quick_add_card_bg"
+        android:paddingStart="@dimen/quick_add_padding_h"
+        android:paddingEnd="@dimen/quick_add_padding_h"
+        android:paddingTop="@dimen/quick_add_padding_v"
+        android:paddingBottom="@dimen/quick_add_padding_v">
 
-        <Button
-            android:id="@+id/btn_expense"
-            android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_weight="1"
-            android:text="Expense"
-            android:textSize="12sp"
-            android:textColor="#F85149"
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Quick Add"
+            android:textColor="#F0F6FC"
+            android:textSize="18sp"
             android:textStyle="bold"
-            android:backgroundTint="#F8514920"
-            android:layout_marginEnd="2dp" />
+            android:letterSpacing="0.02" />
 
-        <Button
-            android:id="@+id/btn_income"
-            android:layout_width="0dp"
-            android:layout_height="36dp"
-            android:layout_weight="1"
-            android:text="Income"
-            android:textSize="12sp"
-            android:textColor="#8B949E"
-            android:backgroundTint="#0D1117"
-            android:layout_marginStart="2dp" />
-    </LinearLayout>
-
-    <!-- Amount -->
-    <EditText
-        android:id="@+id/edit_amount"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Amount"
-        android:textColor="#F0F6FC"
-        android:textColorHint="#484F58"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:inputType="numberDecimal"
-        android:background="@drawable/input_background"
-        android:padding="14dp"
-        android:layout_marginTop="12dp" />
-
-    <!-- Category Spinner -->
-    <Spinner
-        android:id="@+id/spinner_category"
-        android:layout_width="match_parent"
-        android:layout_height="44dp"
-        android:background="@drawable/input_background"
-        android:paddingStart="14dp"
-        android:paddingEnd="10dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
-        android:popupBackground="#161B22"
-        android:layout_marginTop="10dp" />
-
-    <!-- Note -->
-    <EditText
-        android:id="@+id/edit_note"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Note"
-        android:textColor="#F0F6FC"
-        android:textColorHint="#484F58"
-        android:textSize="13sp"
-        android:inputType="text"
-        android:background="@drawable/input_background"
-        android:padding="14dp"
-        android:layout_marginTop="10dp" />
-
-    <!-- Buttons -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="16dp">
-
-        <Button
-            android:id="@+id/btn_cancel"
-            android:layout_width="0dp"
-            android:layout_height="44dp"
-            android:layout_weight="1"
-            android:text="Cancel"
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Saved instantly. Opens the app to sync to the cloud."
             android:textColor="#8B949E"
             android:textSize="12sp"
-            android:textStyle="bold"
+            android:lineSpacingExtra="2dp" />
+
+        <!-- Type segmented control -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/quick_add_field_spacing"
+            android:orientation="horizontal"
             android:background="@drawable/button_secondary"
-            android:backgroundTint="@null"
-            android:layout_marginEnd="6dp" />
+            android:padding="4dp"
+            android:gravity="center">
 
-        <Button
-            android:id="@+id/btn_save"
-            android:layout_width="0dp"
-            android:layout_height="44dp"
-            android:layout_weight="2"
-            android:text="Save"
-            android:textColor="#FFFFFF"
-            android:textSize="13sp"
+            <Button
+                android:id="@+id/btn_expense"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/quick_add_touch_min"
+                android:layout_weight="1"
+                android:layout_marginEnd="3dp"
+                android:text="Expense"
+                android:textAllCaps="false"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:background="@drawable/quick_add_toggle_expense_on"
+                android:stateListAnimator="@null"
+                android:elevation="0dp" />
+
+            <Button
+                android:id="@+id/btn_income"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/quick_add_touch_min"
+                android:layout_weight="1"
+                android:layout_marginStart="3dp"
+                android:text="Income"
+                android:textAllCaps="false"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:background="@drawable/quick_add_toggle_unselected"
+                android:stateListAnimator="@null"
+                android:elevation="0dp" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Amount"
+            android:textColor="#8B949E"
+            android:textSize="11sp"
             android:textStyle="bold"
-            android:background="@drawable/button_primary"
-            android:backgroundTint="@null" />
-    </LinearLayout>
+            android:labelFor="@id/edit_amount" />
 
-</LinearLayout>
+        <EditText
+            android:id="@+id/edit_amount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="52dp"
+            android:gravity="center_vertical"
+            android:hint="0.00"
+            android:textColor="#F0F6FC"
+            android:textColorHint="#484F58"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:inputType="numberDecimal"
+            android:importantForAutofill="no"
+            android:background="@drawable/input_background_rounded"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            android:layout_marginTop="6dp"
+            android:imeOptions="actionNext" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/quick_add_field_spacing"
+            android:text="Category"
+            android:textColor="#8B949E"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:labelFor="@id/spinner_category" />
+
+        <Spinner
+            android:id="@+id/spinner_category"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/quick_add_touch_min"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/input_background_rounded"
+            android:paddingStart="12dp"
+            android:paddingEnd="8dp"
+            android:popupBackground="#161B22" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/quick_add_field_spacing"
+            android:text="Note (optional)"
+            android:textColor="#8B949E"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:labelFor="@id/edit_note" />
+
+        <EditText
+            android:id="@+id/edit_note"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:gravity="top|start"
+            android:hint="Add a short note…"
+            android:textColor="#F0F6FC"
+            android:textColorHint="#484F58"
+            android:textSize="14sp"
+            android:inputType="textCapSentences|textMultiLine"
+            android:maxLines="4"
+            android:importantForAutofill="no"
+            android:background="@drawable/input_background_rounded"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            android:layout_marginTop="6dp"
+            android:imeOptions="actionDone" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="20dp"
+            android:baselineAligned="false">
+
+            <Button
+                android:id="@+id/btn_cancel"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/quick_add_touch_min"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="Cancel"
+                android:textAllCaps="false"
+                android:textColor="#C9D1D9"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:background="@drawable/button_secondary_ripple"
+                android:stateListAnimator="@null"
+                android:elevation="0dp" />
+
+            <Button
+                android:id="@+id/btn_save"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/quick_add_touch_min"
+                android:layout_weight="1.35"
+                android:text="@string/quick_add_save_expense"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:background="@drawable/button_primary_ripple"
+                android:stateListAnimator="@null"
+                android:elevation="0dp" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>
