@@ -3,6 +3,7 @@ import 'dart:async';
 import '../services/firebase_service.dart';
 import '../services/storage_service.dart';
 import '../utils/app_theme.dart';
+import '../utils/app_localization.dart';
 import '../utils/screen_utils.dart';
 
 class DebtsScreen extends StatefulWidget {
@@ -142,7 +143,7 @@ class DebtsScreenState extends State<DebtsScreen> with SingleTickerProviderState
                             ..clear()
                             ..addAll(list.map(_debtSelectionKey).where((k) => k.isNotEmpty));
                         }),
-                child: const Text('All'),
+                child: Text('All'.tr),
               ),
               IconButton(
                 icon: const Icon(Icons.delete_outline_rounded),
@@ -274,10 +275,10 @@ class DebtsScreenState extends State<DebtsScreen> with SingleTickerProviderState
               unselectedLabelColor: AppTheme.textDim,
               labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
               unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w400, fontSize: 13),
-              tabs: const [
-                Tab(text: 'Summary'),
-                Tab(text: 'I Owe'),
-                Tab(text: 'Owed To Me'),
+              tabs: [
+                Tab(text: 'Summary'.tr),
+                Tab(text: 'I Owe'.tr),
+                Tab(text: 'Owed To Me'.tr),
               ],
             ),
           ),
@@ -332,7 +333,7 @@ class DebtsScreenState extends State<DebtsScreen> with SingleTickerProviderState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(person, style: const TextStyle(color: AppTheme.textMain, fontWeight: FontWeight.w600, fontSize: 15)),
-                    Text(isOwedToMe ? 'Owes you' : 'You owe them', style: TextStyle(color: AppTheme.textDim, fontSize: S.fontSmall)),
+                    Text(isOwedToMe ? 'Owes you'.tr : 'You owe them'.tr, style: TextStyle(color: AppTheme.textDim, fontSize: S.fontSmall)),
                   ],
                 ),
               ),
@@ -512,7 +513,7 @@ class DebtsScreenState extends State<DebtsScreen> with SingleTickerProviderState
             const SizedBox(height: 10),
             Text(d['person'] ?? 'Unknown', style: const TextStyle(color: AppTheme.textMain, fontSize: 18, fontWeight: FontWeight.w700)),
             const SizedBox(height: 4),
-            Text(isIOwe ? 'You owe them' : 'They owe you', style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w500)),
+            Text(isIOwe ? 'You owe them'.tr : 'They owe you'.tr, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w500)),
             const SizedBox(height: 16),
             Text('\$${amount.toStringAsFixed(2)}', style: TextStyle(color: color, fontSize: 30, fontWeight: FontWeight.w800)),
             const SizedBox(height: 20),
@@ -616,16 +617,16 @@ class DebtsScreenState extends State<DebtsScreen> with SingleTickerProviderState
               const SizedBox(height: 20),
               TextField(
                 controller: personCtrl,
-                decoration: InputDecoration(labelText: 'Person', focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: color, width: 1.5))),
+                decoration: InputDecoration(labelText: 'Person'.tr, focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: color, width: 1.5))),
               ),
               const SizedBox(height: 14),
               TextField(
                 controller: amountCtrl,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: InputDecoration(labelText: 'Amount', prefixText: '\$ ', focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: color, width: 1.5))),
+                decoration: InputDecoration(labelText: 'Amount'.tr, prefixText: '\$ ', focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: color, width: 1.5))),
               ),
               const SizedBox(height: 14),
-              TextField(controller: noteCtrl, decoration: const InputDecoration(labelText: 'Notes')),
+              TextField(controller: noteCtrl, decoration: InputDecoration(labelText: 'Notes'.tr)),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
@@ -665,7 +666,7 @@ class DebtsScreenState extends State<DebtsScreen> with SingleTickerProviderState
                     }
                   },
                   style: ElevatedButton.styleFrom(backgroundColor: color, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                  child: const Text('Save Changes', style: TextStyle(fontWeight: FontWeight.w700)),
+                  child: Text('Save Changes'.tr, style: const TextStyle(fontWeight: FontWeight.w700)),
                 ),
               ),
             ],
@@ -729,7 +730,7 @@ class DebtsScreenState extends State<DebtsScreen> with SingleTickerProviderState
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('New Debt', style: TextStyle(color: AppTheme.textMain, fontSize: 18, fontWeight: FontWeight.w600)),
+            Text('New Debt'.tr, style: const TextStyle(color: AppTheme.textMain, fontSize: 18, fontWeight: FontWeight.w600)),
             const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -785,22 +786,22 @@ class DebtsScreenState extends State<DebtsScreen> with SingleTickerProviderState
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Add ${isIOwe ? 'I Owe' : 'Owed to Me'}', style: const TextStyle(color: AppTheme.textMain, fontSize: 18, fontWeight: FontWeight.w600)),
+              Text('${'Add'.tr} ${isIOwe ? 'I Owe'.tr : 'Owed to Me'.tr}', style: const TextStyle(color: AppTheme.textMain, fontSize: 18, fontWeight: FontWeight.w600)),
               const SizedBox(height: 20),
               TextField(
                 controller: personController,
-                decoration: const InputDecoration(labelText: 'Person'),
+                decoration: InputDecoration(labelText: 'Person'.tr),
               ),
               const SizedBox(height: 14),
               TextField(
                 controller: amountController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(labelText: 'Amount', prefixText: '\$ '),
+                decoration: InputDecoration(labelText: 'Amount'.tr, prefixText: '\$ '),
               ),
               const SizedBox(height: 14),
               TextField(
                 controller: noteController,
-                decoration: const InputDecoration(labelText: 'Notes'),
+                decoration: InputDecoration(labelText: 'Notes'.tr),
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -889,7 +890,7 @@ class DebtsScreenState extends State<DebtsScreen> with SingleTickerProviderState
                     }
                   },
                   style: ElevatedButton.styleFrom(backgroundColor: isIOwe ? AppTheme.expense : AppTheme.income),
-                  child: const Text('Confirm'),
+                  child: Text('Confirm'.tr),
                 ),
               ),
             ],

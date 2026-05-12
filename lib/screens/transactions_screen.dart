@@ -5,6 +5,7 @@ import '../services/native_pending_sync.dart';
 import '../services/storage_service.dart';
 import '../models/account_model.dart';
 import '../utils/app_theme.dart';
+import '../utils/app_localization.dart';
 import '../utils/screen_utils.dart';
 import '../utils/offline_transactions_merge.dart';
 import '../utils/transaction_list_helpers.dart';
@@ -167,7 +168,7 @@ class TransactionsScreenState extends State<TransactionsScreen> with SingleTicke
                             ..clear()
                             ..addAll(list.map(_transactionSelectionKey).where((k) => k.isNotEmpty));
                         }),
-                child: const Text('All'),
+                child: Text('All'.tr),
               ),
               IconButton(
                 icon: const Icon(Icons.delete_outline_rounded),
@@ -424,9 +425,9 @@ class TransactionsScreenState extends State<TransactionsScreen> with SingleTicke
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text('Filters', style: TextStyle(color: AppTheme.textMain, fontSize: 17, fontWeight: FontWeight.w700)),
+                  Text('Filters'.tr, style: const TextStyle(color: AppTheme.textMain, fontSize: 17, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 16),
-                  const Text('Category', style: TextStyle(color: AppTheme.textDim, fontSize: 12, fontWeight: FontWeight.w600)),
+                  Text('Category'.tr, style: const TextStyle(color: AppTheme.textDim, fontSize: 12, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 6),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -435,13 +436,13 @@ class TransactionsScreenState extends State<TransactionsScreen> with SingleTicke
                       child: DropdownButton<String?>(
                         isExpanded: true,
                         value: cat,
-                        hint: const Text('All categories', style: TextStyle(color: AppTheme.textDim, fontSize: 13)),
+                        hint: Text('All categories'.tr, style: const TextStyle(color: AppTheme.textDim, fontSize: 13)),
                         dropdownColor: AppTheme.surfaceLight,
                         style: const TextStyle(color: AppTheme.textMain, fontSize: 13),
                         items: [
-                          const DropdownMenuItem<String?>(value: null, child: Text('All categories')),
+                          DropdownMenuItem<String?>(value: null, child: Text('All categories'.tr)),
                           ...distinctCategories(_transactions).map(
-                            (c) => DropdownMenuItem<String?>(value: c, child: Text(c)),
+                            (c) => DropdownMenuItem<String?>(value: c, child: Text(c.tr)),
                           ),
                         ],
                         onChanged: (v) => setSheet(() => cat = v),
@@ -449,7 +450,7 @@ class TransactionsScreenState extends State<TransactionsScreen> with SingleTicke
                     ),
                   ),
                   const SizedBox(height: 14),
-                  const Text('Account', style: TextStyle(color: AppTheme.textDim, fontSize: 12, fontWeight: FontWeight.w600)),
+                  Text('Account'.tr, style: const TextStyle(color: AppTheme.textDim, fontSize: 12, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 6),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -489,7 +490,7 @@ class TransactionsScreenState extends State<TransactionsScreen> with SingleTicke
                           acc = null;
                           pend = false;
                         }),
-                        child: const Text('Reset', style: TextStyle(color: AppTheme.textDim)),
+                        child: Text('Reset'.tr, style: const TextStyle(color: AppTheme.textDim)),
                       ),
                       const Spacer(),
                       FilledButton(
@@ -507,7 +508,7 @@ class TransactionsScreenState extends State<TransactionsScreen> with SingleTicke
                           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        child: const Text('Apply'),
+                        child: Text('Apply Filters'.tr),
                       ),
                     ],
                   ),
@@ -612,9 +613,9 @@ class TransactionsScreenState extends State<TransactionsScreen> with SingleTicke
               unselectedLabelColor: AppTheme.textDim,
               labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
               unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w400, fontSize: 14),
-              tabs: const [
-                Tab(text: 'Income'),
-                Tab(text: 'Expenses'),
+              tabs: [
+                Tab(text: 'Income'.tr),
+                Tab(text: 'Expenses'.tr),
               ],
             ),
           ),
@@ -796,7 +797,7 @@ class TransactionsScreenState extends State<TransactionsScreen> with SingleTicke
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(t['category'] ?? 'General', style: const TextStyle(color: AppTheme.textMain, fontWeight: FontWeight.w600, fontSize: 13)),
+                  Text((t['category'] ?? 'General').toString().tr, style: const TextStyle(color: AppTheme.textMain, fontWeight: FontWeight.w600, fontSize: 13)),
                   const SizedBox(height: 2),
                   if (t['date'] != null)
                     Text(DateFormat('MMM dd, yyyy  •  hh:mm a').format(DateTime.parse(t['date'])), style: const TextStyle(color: AppTheme.textDim, fontSize: 11)),
@@ -1013,15 +1014,15 @@ class TransactionsScreenState extends State<TransactionsScreen> with SingleTicke
                 TextField(
                   controller: amountCtrl,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(labelText: 'Amount', prefixText: '\$ ', focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: color, width: 1.5))),
+                  decoration: InputDecoration(labelText: 'Amount'.tr, prefixText: '\$ ', focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: color, width: 1.5))),
                 ),
                 const SizedBox(height: 14),
                 DropdownButtonFormField<String>(
                   initialValue: selectedCategory,
-                  decoration: const InputDecoration(labelText: 'Category'),
+                  decoration: InputDecoration(labelText: 'Category'.tr),
                   dropdownColor: AppTheme.surfaceLight,
                   style: const TextStyle(color: AppTheme.textMain),
-                  items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                  items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c.tr))).toList(),
                   onChanged: (v) => setSheet(() => selectedCategory = v!),
                 ),
                 const SizedBox(height: 14),
@@ -1055,7 +1056,7 @@ class TransactionsScreenState extends State<TransactionsScreen> with SingleTicke
                 const SizedBox(height: 14),
                 TextField(
                   controller: noteCtrl,
-                  decoration: const InputDecoration(labelText: 'Note (Optional)'),
+                  decoration: InputDecoration(labelText: 'Note (optional)'.tr),
                 ),
                 const SizedBox(height: 24),
                 SizedBox(
@@ -1132,13 +1133,13 @@ class TransactionsScreenState extends State<TransactionsScreen> with SingleTicke
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('New Entry', style: TextStyle(color: AppTheme.textMain, fontSize: 18, fontWeight: FontWeight.w600)),
+            Text('New Entry'.tr, style: const TextStyle(color: AppTheme.textMain, fontSize: 18, fontWeight: FontWeight.w600)),
             const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildAddOption('Income', Icons.add_chart_rounded, AppTheme.income, true),
-                _buildAddOption('Expense', Icons.bar_chart_rounded, AppTheme.expense, false),
+                _buildAddOption('Income'.tr, Icons.add_chart_rounded, AppTheme.income, true),
+                _buildAddOption('Expense'.tr, Icons.bar_chart_rounded, AppTheme.expense, false),
               ],
             ),
           ],
@@ -1239,7 +1240,7 @@ class _AddTransactionSheetState extends State<_AddTransactionSheet> {
             TextField(
               controller: _amountController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(labelText: 'Amount', prefixText: '\$ '),
+              decoration: InputDecoration(labelText: 'Amount'.tr, prefixText: '\$ '),
             ),
             const SizedBox(height: 14),
             DropdownButtonFormField<String>(
@@ -1253,7 +1254,7 @@ class _AddTransactionSheetState extends State<_AddTransactionSheet> {
             const SizedBox(height: 14),
             DropdownButtonFormField<AccountModel>(
               initialValue: widget.accounts.contains(_selectedAccount) ? _selectedAccount : null,
-              decoration: const InputDecoration(labelText: 'Account'),
+              decoration: InputDecoration(labelText: 'Account'.tr),
               dropdownColor: AppTheme.surfaceLight,
               style: const TextStyle(color: AppTheme.textMain),
               items: widget.accounts.map((acc) => DropdownMenuItem(value: acc, child: Text(acc.name))).toList(),

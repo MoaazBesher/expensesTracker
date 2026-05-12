@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/firebase_service.dart';
 import '../models/account_model.dart';
 import '../utils/app_theme.dart';
+import '../utils/app_localization.dart';
 import '../utils/screen_utils.dart';
 
 class AccountsScreen extends StatefulWidget {
@@ -58,7 +59,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Total Across All Sources',
+                                Text('Total Across All Sources'.tr,
                                     style: TextStyle(color: AppTheme.textDim, fontSize: 12, fontWeight: FontWeight.w500)),
                                 const SizedBox(height: 4),
                                 Text(
@@ -94,12 +95,12 @@ class _AccountsScreenState extends State<AccountsScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'Your Accounts',
-                            style: TextStyle(color: AppTheme.textMain, fontSize: 15, fontWeight: FontWeight.w700),
+                          Text(
+                            'Your Accounts'.tr,
+                            style: const TextStyle(color: AppTheme.textMain, fontSize: 15, fontWeight: FontWeight.w700),
                           ),
                           Text(
-                            '${accounts.length} ${accounts.length == 1 ? 'source' : 'sources'}',
+                            '${accounts.length} ${accounts.length == 1 ? 'source'.tr : 'sources'.tr}',
                             style: const TextStyle(color: AppTheme.textDim, fontSize: 12),
                           ),
                         ],
@@ -165,7 +166,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 2),
           child: Text(
-            account.type,
+            account.type.tr,
             style: const TextStyle(color: AppTheme.textDim, fontSize: 12),
           ),
         ),
@@ -185,7 +186,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                   color: AppTheme.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: const Text('Primary', style: TextStyle(color: AppTheme.primary, fontSize: 10, fontWeight: FontWeight.w600)),
+                child: Text('Primary'.tr, style: const TextStyle(color: AppTheme.primary, fontSize: 10, fontWeight: FontWeight.w600)),
               ),
             ],
           ],
@@ -209,14 +210,14 @@ class _AccountsScreenState extends State<AccountsScreen> {
             child: Icon(Icons.account_balance_wallet_outlined, size: 40, color: AppTheme.textDim.withValues(alpha: 0.4)),
           ),
           const SizedBox(height: 16),
-          const Text('No accounts yet', style: TextStyle(color: AppTheme.textMain, fontSize: 15, fontWeight: FontWeight.w600)),
+          Text('No accounts yet'.tr, style: const TextStyle(color: AppTheme.textMain, fontSize: 15, fontWeight: FontWeight.w600)),
           const SizedBox(height: 6),
-          const Text('Add a money source to get started', style: TextStyle(color: AppTheme.textDim, fontSize: 13)),
+          Text('Add a money source to get started'.tr, style: const TextStyle(color: AppTheme.textDim, fontSize: 13)),
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: _showAddAccountSheet,
             icon: const Icon(Icons.add_rounded, size: 18),
-            label: const Text('Add Account'),
+            label: Text('Add Account'.tr),
           ),
         ],
       ),
@@ -258,27 +259,27 @@ class _AccountsScreenState extends State<AccountsScreen> {
                     ),
                   ),
                 ),
-                const Text('Add Money Source',
+                Text('Add Money Source'.tr,
                     style: TextStyle(color: AppTheme.textMain, fontSize: 18, fontWeight: FontWeight.w700)),
                 const SizedBox(height: 24),
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Name', hintText: 'e.g. My Visa'),
+                  decoration: InputDecoration(labelText: 'Name'.tr, hintText: 'e.g. My Visa'),
                 ),
                 const SizedBox(height: 14),
                 TextField(
                   controller: balanceController,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(labelText: 'Balance', prefixText: '\$ '),
+                  decoration: InputDecoration(labelText: 'Balance'.tr, prefixText: '\$ '),
                 ),
                 const SizedBox(height: 14),
                 DropdownButtonFormField<String>(
                   initialValue: selectedType,
-                  decoration: const InputDecoration(labelText: 'Type'),
+                  decoration: InputDecoration(labelText: 'Type'.tr),
                   dropdownColor: AppTheme.surfaceLight,
                   style: const TextStyle(color: AppTheme.textMain),
                   items: ['Cash', 'Bank', 'Visa', 'Savings', 'Other']
-                      .map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+                      .map((t) => DropdownMenuItem(value: t, child: Text(t.tr))).toList(),
                   onChanged: (val) => setSheetState(() => selectedType = val!),
                 ),
                 const SizedBox(height: 28),
@@ -294,7 +295,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                         if (context.mounted) Navigator.pop(context);
                       }
                     },
-                    child: const Text('Create Account', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                    child: Text('Create Account'.tr, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                   ),
                 ),
               ],
@@ -329,7 +330,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               tileColor: AppTheme.surfaceLight,
               leading: const Icon(Icons.star_rounded, color: AppTheme.secondary, size: 22),
-              title: const Text('Set as Primary', style: TextStyle(color: AppTheme.textMain, fontWeight: FontWeight.w500)),
+              title: Text('Set as Primary'.tr, style: const TextStyle(color: AppTheme.textMain, fontWeight: FontWeight.w500)),
               onTap: () async {
                 await _firebaseService.setAccountAsDefault(account.id);
                 if (context.mounted) Navigator.pop(context);
@@ -340,7 +341,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               tileColor: AppTheme.accent.withValues(alpha: 0.08),
               leading: const Icon(Icons.delete_outline_rounded, color: AppTheme.accent, size: 22),
-              title: const Text('Delete Account', style: TextStyle(color: AppTheme.accent, fontWeight: FontWeight.w500)),
+              title: Text('Delete Account'.tr, style: const TextStyle(color: AppTheme.accent, fontWeight: FontWeight.w500)),
               onTap: () async {
                 await _firebaseService.deleteAccount(account.id);
                 if (context.mounted) Navigator.pop(context);

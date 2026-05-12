@@ -16,11 +16,17 @@ Log transactions with categories (Food, Transport, Shopping, Bills, Entertainmen
 ### Debt Ledger
 Dual-ledger system tracking money you owe and money owed to you. Each entry records the other party, amount, and status. Automatic net balance calculation displayed at the top.
 
+### Professional Reports & PDF Export
+A dedicated reports dashboard providing deep financial insights. Export your monthly data into professionally designed PDFs with detailed category breakdowns, income/expense comparisons, and a complete transaction log.
+
+### Comprehensive Localization (i18n)
+Full multi-language support for **English** and **Arabic**. A global toggle allows instant switching between languages and layouts (LTR/RTL). All UI elements, categories, and PDF reports are fully localized.
+
 ### Smart Reminders
 Date-driven notification system for upcoming financial obligations. Each reminder includes a title, due date, and optional notes. The home screen dashboard shows the nearest alerts and the home widget displays the next 2 upcoming reminders.
 
 ### PageView Navigation
-Swipe left or right to navigate between sections -- Dashboard, Accounts, Activity, Reminders, and Debts. The bottom navigation bar syncs with the current page and provides haptic feedback.
+Swipe left or right to navigate between sections -- Dashboard, Activity, Accounts, Debts, Reports, and Alerts. The bottom navigation bar syncs with the current page and provides haptic feedback.
 
 ### Offline-First Architecture
 Local SQLite caching ensures full functionality without internet connectivity. Data syncs automatically to Firebase when the connection is restored. No data loss during network interruptions.
@@ -54,6 +60,8 @@ Professional dark color palette inspired by GitHub's design system:
 |---|---|
 | Framework | Flutter (Dart 3.x) |
 | Backend | Firebase Auth, Firestore, Realtime Database |
+| Localization | Custom `AppLocalization` (intl, flutter_localizations) |
+| PDF Engine | `pdf`, `printing` with Cairo font support |
 | State Management | StatefulWidget + Streams |
 | Local Storage | SQLite (via sqflite) |
 | Native Android | Kotlin |
@@ -139,11 +147,15 @@ lib/
     firebase_service.dart        -- Firestore CRUD operations (transactions, accounts, debts, reminders)
     widget_service.dart          -- Pushes data to Android home screen widgets
     storage_service.dart         -- Local SQLite for offline support
+    pdf_export_service.dart      -- Professional PDF report generation with RTL support
+    native_pending_sync.dart     -- Background sync for native quick-add queue
   models/
     account_model.dart           -- Account data model
   utils/
     app_theme.dart               -- Dark theme colors, text styles, card decorations
     screen_utils.dart            -- Responsive screen utilities (wp, hp, sp, clamp)
+    app_localization.dart        -- Central dictionary and toggle for AR/EN support
+    offline_transactions_merge.dart -- Logic for merging SQLite and Cloud data
     firebase_config.dart         -- Firebase credentials (gitignored)
     firebase_config.example.dart -- Template for Firebase credentials
 ```

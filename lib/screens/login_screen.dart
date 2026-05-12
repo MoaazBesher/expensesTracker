@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../app_navigator.dart';
 import '../services/auth_service.dart';
 import '../utils/app_theme.dart';
+import '../utils/app_localization.dart';
 import '../utils/screen_utils.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -49,9 +50,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: const Icon(Icons.exit_to_app_rounded, color: AppTheme.accent, size: 16),
               ),
               const SizedBox(width: 10),
-              const Text(
-                'Press back again to exit',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textMain),
+              Text(
+                'Press back again to exit'.tr,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textMain),
               ),
             ],
           ),
@@ -80,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Sign in failed: $errorMessage', style: const TextStyle(fontSize: 13)),
+            content: Text('Sign in failed'.tr + ': $errorMessage', style: const TextStyle(fontSize: 13)),
             backgroundColor: AppTheme.accent,
             duration: const Duration(seconds: 4),
           ),
@@ -117,15 +118,15 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: const Icon(Icons.account_balance_wallet, size: 36, color: AppTheme.primary),
                 ),
                 const SizedBox(height: 32),
-                const Text(
-                  'Welcome',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.textMain),
+                Text(
+                  'Welcome'.tr,
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppTheme.textMain),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Track your finances.',
+                  'Track your finances.'.tr,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, color: AppTheme.textDim),
+                  style: const TextStyle(fontSize: 14, color: AppTheme.textDim),
                 ),
                 const SizedBox(height: 48),
                 _isLoading
@@ -138,7 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             'https://cdn-icons-png.flaticon.com/512/2991/2991148.png',
                             height: 20,
                           ),
-                          label: const Text('Continue with Google'),
+                          label: Text('Continue with Google'.tr),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppTheme.textMain,
                             side: const BorderSide(color: AppTheme.border),

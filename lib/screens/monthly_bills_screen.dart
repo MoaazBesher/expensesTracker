@@ -8,6 +8,7 @@ import '../utils/screen_utils.dart';
 import 'package:intl/intl.dart';
 import 'package:printing/printing.dart';
 import '../services/pdf_export_service.dart';
+import '../utils/app_localization.dart';
 
 class MonthlyBillsScreen extends StatefulWidget {
   const MonthlyBillsScreen({super.key});
@@ -129,18 +130,18 @@ class _MonthlyBillsScreenState extends State<MonthlyBillsScreen> with SingleTick
   }
 
   String _getInsights() {
-    if (_totalExpenses == 0 && _totalIncome == 0) return "No transactions for this month.";
+    if (_totalExpenses == 0 && _totalIncome == 0) return "No transactions for this month.".tr;
     String note = "";
     if (_expenseByCategory.isNotEmpty) {
       final topExp = _expenseByCategory.entries.first;
-      note += "💡 Top expense: ${topExp.key} (\$${topExp.value.toStringAsFixed(0)})\n";
+      note += "💡 " + "Top expense".tr + ": ${topExp.key.tr} (\$${topExp.value.toStringAsFixed(0)})\n";
     }
     if (_netSavings > 0) {
-      note += "✨ Great job! You saved \$${_netSavings.toStringAsFixed(0)}.";
+      note += "✨ " + "Great job! You saved".tr + " \$${_netSavings.toStringAsFixed(0)}.";
     } else if (_netSavings < 0) {
-      note += "⚠️ Careful, you spent \$${_netSavings.abs().toStringAsFixed(0)} more than you earned.";
+      note += "⚠️ " + "Careful, you spent".tr + " \$${_netSavings.abs().toStringAsFixed(0)} " + "more than you earned".tr + ".";
     } else {
-      note += "⚖️ You broke even this month.";
+      note += "⚖️ " + "You broke even this month".tr + ".";
     }
     return note.trim();
   }
@@ -205,7 +206,7 @@ class _MonthlyBillsScreenState extends State<MonthlyBillsScreen> with SingleTick
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(category, style: const TextStyle(color: AppTheme.textMain, fontSize: 18, fontWeight: FontWeight.w700)),
-                      Text('${txs.length} transactions', style: const TextStyle(color: AppTheme.textDim, fontSize: 13)),
+                      Text('${txs.length} ' + 'transactions'.tr, style: const TextStyle(color: AppTheme.textDim, fontSize: 13)),
                     ],
                   ),
                 ),
@@ -253,8 +254,8 @@ class _MonthlyBillsScreenState extends State<MonthlyBillsScreen> with SingleTick
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Overview',
+                        Text(
+                          'Overview'.tr,
                           style: TextStyle(color: AppTheme.textDim, fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.5),
                         ),
                         const SizedBox(height: 2),
@@ -356,7 +357,7 @@ class _MonthlyBillsScreenState extends State<MonthlyBillsScreen> with SingleTick
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Month Insights', style: TextStyle(color: AppTheme.textMain, fontSize: 14, fontWeight: FontWeight.w800)),
+                        Text('Month Insights'.tr, style: TextStyle(color: AppTheme.textMain, fontSize: 14, fontWeight: FontWeight.w800)),
                           const SizedBox(height: 6),
                           Text(
                             _getInsights(),
@@ -397,8 +398,8 @@ class _MonthlyBillsScreenState extends State<MonthlyBillsScreen> with SingleTick
                   unselectedLabelColor: AppTheme.textDim,
                   labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
                   tabs: [
-                    Tab(text: 'Expenses'),
-                    Tab(text: 'Income'),
+                    Tab(text: 'Expenses'.tr),
+                    Tab(text: 'Income'.tr),
                   ],
                 ),
               ),
@@ -431,7 +432,7 @@ class _MonthlyBillsScreenState extends State<MonthlyBillsScreen> with SingleTick
           children: [
             Icon(Icons.pie_chart_outline_rounded, size: 56, color: AppTheme.textDim.withValues(alpha: 0.2)),
             const SizedBox(height: 16),
-            Text('No ${isIncome ? 'income' : 'expenses'} this month', style: const TextStyle(color: AppTheme.textDim, fontSize: 15, fontWeight: FontWeight.w600)),
+            Text(isIncome ? 'No income this month'.tr : 'No expenses this month'.tr, style: const TextStyle(color: AppTheme.textDim, fontSize: 15, fontWeight: FontWeight.w600)),
           ],
         ),
       );
@@ -479,7 +480,7 @@ class _MonthlyBillsScreenState extends State<MonthlyBillsScreen> with SingleTick
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            cat,
+                            cat.tr,
                             style: const TextStyle(color: AppTheme.textMain, fontSize: 16, fontWeight: FontWeight.w700),
                           ),
                           Text(
@@ -555,7 +556,7 @@ class _MonthlyBillsScreenState extends State<MonthlyBillsScreen> with SingleTick
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  t['category'] ?? 'General',
+                  (t['category'] ?? 'General').toString().tr,
                   style: const TextStyle(color: AppTheme.textMain, fontWeight: FontWeight.w600, fontSize: 13),
                 ),
                 if (t['note'] != null && t['note'].toString().isNotEmpty) ...[

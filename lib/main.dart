@@ -21,6 +21,8 @@ import 'utils/app_theme.dart';
 import 'utils/screen_utils.dart';
 import 'utils/firebase_config.dart';
 import 'app_navigator.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'utils/app_localization.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,12 +35,30 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     S.init(context);
-    return MaterialApp(
-      navigatorKey: appRootNavigatorKey,
-      title: 'Expenses Tracker',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      home: const SplashScreen(),
+    return ValueListenableBuilder<Locale>(
+      valueListenable: AppLocalization.localeNotifier,
+      builder: (context, locale, child) {
+        return MaterialApp(
+          navigatorKey: appRootNavigatorKey,
+          title: 'Expenses Tracker',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.darkTheme,
+          locale: locale,
+          supportedLocales: const [Locale('en'), Locale('ar')],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          builder: (context, child) {
+            return Directionality(
+              textDirection: locale.languageCode == 'ar' ? TextDirection.rtl : TextDirection.ltr,
+              child: child!,
+            );
+          },
+          home: const SplashScreen(),
+        );
+      },
     );
   }
 }
@@ -434,7 +454,7 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
                   child: const Icon(Icons.bolt_rounded, color: AppTheme.primary, size: 20),
                 ),
                 const SizedBox(width: 10),
-                const Text('Quick Add', style: TextStyle(color: AppTheme.textMain, fontSize: 17, fontWeight: FontWeight.w700)),
+                Text('Quick Add'.tr, style: const TextStyle(color: AppTheme.textMain, fontSize: 17, fontWeight: FontWeight.w700)),
               ],
             ),
             content: SingleChildScrollView(
@@ -465,7 +485,7 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
                                 children: [
                                   Icon(Icons.arrow_downward_rounded, size: 16, color: !isIncome ? AppTheme.expense : AppTheme.textDim),
                                   const SizedBox(width: 4),
-                                  Text('Expense', style: TextStyle(color: !isIncome ? AppTheme.expense : AppTheme.textDim, fontWeight: FontWeight.w600, fontSize: 13)),
+                                  Text('Expense'.tr, style: TextStyle(color: !isIncome ? AppTheme.expense : AppTheme.textDim, fontWeight: FontWeight.w600, fontSize: 13)),
                                 ],
                               ),
                             ),
@@ -487,7 +507,7 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
                                 children: [
                                   Icon(Icons.arrow_upward_rounded, size: 16, color: isIncome ? AppTheme.income : AppTheme.textDim),
                                   const SizedBox(width: 4),
-                                  Text('Income', style: TextStyle(color: isIncome ? AppTheme.income : AppTheme.textDim, fontWeight: FontWeight.w600, fontSize: 13)),
+                                  Text('Income'.tr, style: TextStyle(color: isIncome ? AppTheme.income : AppTheme.textDim, fontWeight: FontWeight.w600, fontSize: 13)),
                                 ],
                               ),
                             ),
@@ -524,14 +544,14 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
                     dropdownColor: AppTheme.surfaceLight,
                     style: const TextStyle(color: AppTheme.textMain, fontSize: 13),
                     decoration: InputDecoration(
-                      labelText: 'Category',
+                      labelText: 'Category'.tr,
                       labelStyle: const TextStyle(color: AppTheme.textDim, fontSize: 12),
                       filled: true,
                       fillColor: AppTheme.background,
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     ),
-                    items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                    items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c.tr))).toList(),
                     onChanged: (v) => setDialogState(() => selectedCategory = v!),
                   ),
                   const SizedBox(height: 10),
@@ -541,7 +561,7 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
                     controller: noteController,
                     style: const TextStyle(color: AppTheme.textMain, fontSize: 13),
                     decoration: InputDecoration(
-                      labelText: 'Note (optional)',
+                      labelText: 'Note (optional)'.tr,
                       labelStyle: const TextStyle(color: AppTheme.textDim, fontSize: 12),
                       filled: true,
                       fillColor: AppTheme.background,
@@ -564,7 +584,7 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text('Cancel'),
+                      child: Text('Cancel'.tr),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -608,7 +628,7 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: Text(isIncome ? 'Add Income' : 'Add Expense', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                      child: Text(isIncome ? 'Add Income'.tr : 'Add Expense'.tr, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
                     ),
                   ),
                 ],
@@ -697,12 +717,12 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  _pageTitles[_currentIndex],
+                  _pageTitles[_currentIndex].tr,
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textMain, height: 1.1),
                 ),
                 Text(
-                  'Expenses Tracker',
-                  style: TextStyle(fontSize: 11, color: AppTheme.textDim, fontWeight: FontWeight.w400, height: 1.1),
+                  'Expenses Tracker'.tr,
+                  style: const TextStyle(fontSize: 11, color: AppTheme.textDim, fontWeight: FontWeight.w400, height: 1.1),
                 ),
               ],
             ),
@@ -711,22 +731,33 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
         actions: [
           if (!_isOnline)
             Container(
-              margin: const EdgeInsets.only(right: 16),
+              margin: const EdgeInsets.only(right: 16, left: 16),
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
                 color: AppTheme.accent.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: AppTheme.accent.withValues(alpha: 0.35)),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.wifi_off_rounded, size: 13, color: AppTheme.accent),
-                  SizedBox(width: 4),
-                  Text('Offline', style: TextStyle(color: AppTheme.accent, fontSize: 11, fontWeight: FontWeight.w600)),
+                  const Icon(Icons.wifi_off_rounded, size: 13, color: AppTheme.accent),
+                  const SizedBox(width: 4),
+                  Text('Offline'.tr, style: const TextStyle(color: AppTheme.accent, fontSize: 11, fontWeight: FontWeight.w600)),
                 ],
               ),
             ),
+          
+          // Language Switch Button
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 8),
+            child: IconButton(
+              icon: Icon(Icons.language_rounded, color: AppTheme.textDim, size: 22),
+              onPressed: () {
+                AppLocalization.toggleLanguage();
+              },
+            ),
+          ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
@@ -799,7 +830,7 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
             ),
             const SizedBox(height: 2),
             Text(
-              item.label,
+              item.label.tr,
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,

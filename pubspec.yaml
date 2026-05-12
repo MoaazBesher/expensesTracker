@@ -18,7 +18,9 @@ dependencies:
   connectivity_plus:
   sqflite:
   shared_preferences:
-  intl: ^0.19.0
+  intl: ^0.20.2
+  flutter_localizations:
+    sdk: flutter
   fl_chart: ^0.68.0
   table_calendar: ^3.1.0
   cupertino_icons: ^1.0.8

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/firebase_service.dart';
 import '../services/storage_service.dart';
 import '../utils/app_theme.dart';
+import '../utils/app_localization.dart';
 import '../utils/screen_utils.dart';
 import 'package:intl/intl.dart';
 
@@ -106,7 +107,7 @@ class RemindersScreenState extends State<RemindersScreen> {
               IconButton(icon: const Icon(Icons.close_rounded), tooltip: 'Cancel', onPressed: _exitReminderSelectMode),
               Expanded(
                 child: Text(
-                  n == 0 ? 'Select alerts' : '$n selected',
+                  n == 0 ? 'Select alerts'.tr : '$n ' + 'selected'.tr,
                   style: const TextStyle(color: AppTheme.textMain, fontWeight: FontWeight.w600, fontSize: 14),
                 ),
               ),
@@ -118,7 +119,7 @@ class RemindersScreenState extends State<RemindersScreen> {
                             ..clear()
                             ..addAll(list.map(_reminderSelectionKey).where((k) => k.isNotEmpty));
                         }),
-                child: const Text('All'),
+                child: Text('All'.tr),
               ),
               IconButton(
                 icon: const Icon(Icons.delete_outline_rounded),
@@ -235,7 +236,7 @@ class RemindersScreenState extends State<RemindersScreen> {
                           ),
                         ),
                         child: Text(
-                          label,
+                          label.tr,
                           style: TextStyle(
                             color: isSelected ? AppTheme.primary : AppTheme.textDim,
                             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
@@ -383,19 +384,19 @@ class RemindersScreenState extends State<RemindersScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
               decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(20)),
-              child: Text(isOverdue ? 'Overdue' : 'Upcoming', style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
+              child: Text(isOverdue ? 'Overdue'.tr : 'Upcoming'.tr, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
             ),
             const SizedBox(height: 20),
-            _detailRow(Icons.calendar_today_rounded, 'Date & Time', DateFormat('EEE, MMM dd yyyy  •  hh:mm a').format(date)),
+            _detailRow(Icons.calendar_today_rounded, 'Date & Time'.tr, DateFormat('EEE, MMM dd yyyy  •  hh:mm a').format(date)),
             if ((r['notes'] ?? '').toString().isNotEmpty)
-              _detailRow(Icons.notes_rounded, 'Notes', r['notes'].toString()),
+              _detailRow(Icons.notes_rounded, 'Notes'.tr, r['notes'].toString()),
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: () { Navigator.pop(ctx); _showReminderActions(r); },
                 icon: const Icon(Icons.more_horiz_rounded, size: 18),
-                label: const Text('Actions'),
+                label: Text('Actions'.tr),
                 style: OutlinedButton.styleFrom(foregroundColor: AppTheme.textMain, side: const BorderSide(color: AppTheme.border), padding: const EdgeInsets.symmetric(vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
               ),
             ),
@@ -441,7 +442,7 @@ class RemindersScreenState extends State<RemindersScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               tileColor: AppTheme.surfaceLight,
               leading: const Icon(Icons.edit_rounded, color: AppTheme.primary),
-              title: const Text('Edit Alert', style: TextStyle(color: AppTheme.textMain, fontWeight: FontWeight.w500)),
+              title: Text('Edit Alert'.tr, style: const TextStyle(color: AppTheme.textMain, fontWeight: FontWeight.w500)),
               onTap: () { Navigator.pop(ctx); _showEditReminderSheet(r); },
             ),
             const SizedBox(height: 8),
@@ -449,7 +450,7 @@ class RemindersScreenState extends State<RemindersScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               tileColor: AppTheme.accent.withValues(alpha: 0.08),
               leading: const Icon(Icons.delete_outline_rounded, color: AppTheme.accent),
-              title: const Text('Delete Alert', style: TextStyle(color: AppTheme.accent, fontWeight: FontWeight.w500)),
+              title: Text('Delete Alert'.tr, style: const TextStyle(color: AppTheme.accent, fontWeight: FontWeight.w500)),
               onTap: () { Navigator.pop(ctx); _confirmDelete(r['id']); },
             ),
           ],
@@ -481,7 +482,7 @@ class RemindersScreenState extends State<RemindersScreen> {
               children: [
                 Container(width: 40, height: 4, decoration: BoxDecoration(color: AppTheme.border, borderRadius: BorderRadius.circular(2))),
                 const SizedBox(height: 16),
-                const Text('Edit Alert', style: TextStyle(color: AppTheme.textMain, fontSize: 18, fontWeight: FontWeight.w700)),
+                Text('Edit Alert'.tr, style: const TextStyle(color: AppTheme.textMain, fontSize: 18, fontWeight: FontWeight.w700)),
                 const SizedBox(height: 20),
                 TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Title')),
                 const SizedBox(height: 14),
@@ -531,7 +532,7 @@ class RemindersScreenState extends State<RemindersScreen> {
                       if (mounted) _loadReminders();
                     },
                     style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                    child: const Text('Save Changes', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                    child: Text('Save Changes'.tr, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                   ),
                 ),
               ],
@@ -549,7 +550,7 @@ class RemindersScreenState extends State<RemindersScreen> {
         children: [
           Icon(Icons.notifications_none_rounded, size: 48, color: AppTheme.textDim.withValues(alpha: 0.2)),
           const SizedBox(height: 12),
-          Text('No alerts', style: TextStyle(color: AppTheme.textDim, fontSize: S.fontBody)),
+          Text('No alerts'.tr, style: TextStyle(color: AppTheme.textDim, fontSize: S.fontBody)),
         ],
       ),
     );
@@ -579,11 +580,11 @@ class RemindersScreenState extends State<RemindersScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('New Alert', style: TextStyle(color: AppTheme.textMain, fontSize: 18, fontWeight: FontWeight.w600)),
+                Text('New Alert'.tr, style: const TextStyle(color: AppTheme.textMain, fontSize: 18, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 20),
                 TextField(
                   controller: titleController,
-                  decoration: const InputDecoration(labelText: 'Title'),
+                  decoration: InputDecoration(labelText: 'Title'.tr),
                 ),
                 const SizedBox(height: 14),
                 Row(
@@ -626,7 +627,7 @@ class RemindersScreenState extends State<RemindersScreen> {
                 const SizedBox(height: 14),
                 TextField(
                   controller: noteController,
-                  decoration: const InputDecoration(labelText: 'Notes'),
+                  decoration: InputDecoration(labelText: 'Notes'.tr),
                 ),
                 const SizedBox(height: 24),
                 SizedBox(
@@ -668,7 +669,7 @@ class RemindersScreenState extends State<RemindersScreen> {
                         if (context.mounted) Navigator.pop(context);
                       }
                     },
-                    child: const Text('Create Alert'),
+                    child: Text('Create Alert'.tr),
                   ),
                 ),
               ],
@@ -685,7 +686,7 @@ class RemindersScreenState extends State<RemindersScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.surface,
-        title: const Text('Delete Alert?', style: TextStyle(fontSize: 16)),
+        title: Text('Delete Alert?'.tr, style: const TextStyle(fontSize: 16)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           TextButton(

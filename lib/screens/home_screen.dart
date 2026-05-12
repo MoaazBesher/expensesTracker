@@ -7,6 +7,7 @@ import '../services/storage_service.dart';
 import '../services/widget_service.dart';
 import '../models/account_model.dart';
 import '../utils/app_theme.dart';
+import '../utils/app_localization.dart';
 import '../utils/screen_utils.dart';
 import '../utils/offline_transactions_merge.dart';
 import 'package:intl/intl.dart';
@@ -196,9 +197,9 @@ class HomeScreenState extends State<HomeScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
-                              'Total Balance',
-                              style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500),
+                            Text(
+                              'Total Balance'.tr,
+                              style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13, fontWeight: FontWeight.w500),
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -238,7 +239,7 @@ class HomeScreenState extends State<HomeScreen> {
                                         child: const Icon(Icons.arrow_downward_rounded, size: 12, color: Colors.greenAccent),
                                       ),
                                       const SizedBox(width: 6),
-                                      const Text('Income', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                                      Text('Income'.tr, style: const TextStyle(color: Colors.white70, fontSize: 12)),
                                     ],
                                   ),
                                   const SizedBox(height: 4),
@@ -260,7 +261,7 @@ class HomeScreenState extends State<HomeScreen> {
                                         child: const Icon(Icons.arrow_upward_rounded, size: 12, color: Colors.redAccent),
                                       ),
                                       const SizedBox(width: 6),
-                                      const Text('Expenses', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                                      Text('Expenses'.tr, style: const TextStyle(color: Colors.white70, fontSize: 12)),
                                     ],
                                   ),
                                   const SizedBox(height: 4),
@@ -290,7 +291,7 @@ class HomeScreenState extends State<HomeScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-                child: _sectionHeader('My Accounts', onTap: () => widget.onNavigateTab?.call(2)),
+                child: _sectionHeader('My Accounts'.tr, onTap: () => widget.onNavigateTab?.call(2)),
               ),
             ),
             SliverToBoxAdapter(
@@ -312,7 +313,7 @@ class HomeScreenState extends State<HomeScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-                child: _sectionHeader('Debts Overview', onTap: () => widget.onNavigateTab?.call(3)),
+                child: _sectionHeader('Debts Overview'.tr, onTap: () => widget.onNavigateTab?.call(3)),
               ),
             ),
             SliverToBoxAdapter(
@@ -320,9 +321,9 @@ class HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
                   children: [
-                    Expanded(child: _buildSummaryCard('I Owe', _totalIOwe, Icons.upload_rounded, AppTheme.expense, onTap: () => widget.onNavigateTab?.call(3))),
+                    Expanded(child: _buildSummaryCard('I Owe'.tr, _totalIOwe, Icons.upload_rounded, AppTheme.expense, onTap: () => widget.onNavigateTab?.call(3))),
                     const SizedBox(width: 12),
-                    Expanded(child: _buildSummaryCard('Owed to Me', _totalOwedMe, Icons.download_rounded, AppTheme.income, onTap: () => widget.onNavigateTab?.call(3))),
+                    Expanded(child: _buildSummaryCard('Owed to Me'.tr, _totalOwedMe, Icons.download_rounded, AppTheme.income, onTap: () => widget.onNavigateTab?.call(3))),
                   ],
                 ),
               ),
@@ -332,7 +333,7 @@ class HomeScreenState extends State<HomeScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-                child: _sectionHeader('Recent Activity', onTap: () => widget.onNavigateTab?.call(1)),
+                child: _sectionHeader('Recent Activity'.tr, onTap: () => widget.onNavigateTab?.call(1)),
               ),
             ),
             _recentTransactions.isEmpty
@@ -382,7 +383,7 @@ class HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isToday ? 'Today' : 'Upcoming Alert',
+                  isToday ? 'Today'.tr : 'Upcoming Alert'.tr,
                   style: const TextStyle(color: AppTheme.accent, fontSize: 11, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 2),
@@ -431,7 +432,7 @@ class HomeScreenState extends State<HomeScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('See All', style: TextStyle(color: AppTheme.primary, fontSize: 12, fontWeight: FontWeight.w600)),
+                Text('See All'.tr, style: const TextStyle(color: AppTheme.primary, fontSize: 12, fontWeight: FontWeight.w600)),
                 const SizedBox(width: 4),
                 const Icon(Icons.arrow_forward_ios_rounded, size: 10, color: AppTheme.primary),
               ],
@@ -511,7 +512,7 @@ class HomeScreenState extends State<HomeScreen> {
             child: Icon(icon, color: color, size: 15),
           ),
           const SizedBox(height: 10),
-          Text(title, style: const TextStyle(color: AppTheme.textDim, fontSize: 11, fontWeight: FontWeight.w500)),
+          Text(title.tr, style: const TextStyle(color: AppTheme.textDim, fontSize: 11, fontWeight: FontWeight.w500)),
           const SizedBox(height: 3),
           Text(
             isCurrency ? '\$${amount.abs().toStringAsFixed(0)}' : amount.toStringAsFixed(0),
@@ -558,7 +559,7 @@ class HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  t['category'] ?? 'General',
+                  (t['category'] ?? 'General').toString().tr,
                   style: const TextStyle(color: AppTheme.textMain, fontWeight: FontWeight.w600, fontSize: 13),
                 ),
                 const SizedBox(height: 2),
@@ -576,7 +577,7 @@ class HomeScreenState extends State<HomeScreen> {
             children: [
               if (t['pendingSync'] == true) ...[
                 Tooltip(
-                  message: 'Pending upload',
+                  message: 'Pending upload'.tr,
                   child: Icon(Icons.cloud_queue_rounded, size: 15, color: AppTheme.textDim.withValues(alpha: 0.85)),
                 ),
                 const SizedBox(width: 6),
@@ -596,7 +597,7 @@ class HomeScreenState extends State<HomeScreen> {
   Widget _buildAccountsEmpty() {
     return Center(
       child: Text(
-        'No accounts added yet',
+        'No accounts added yet'.tr,
         style: TextStyle(color: AppTheme.textDim, fontSize: 13),
       ),
     );
@@ -607,7 +608,7 @@ class HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.symmetric(vertical: 24),
       child: Center(
         child: Text(
-          'No recent transactions',
+          'No recent transactions'.tr,
           style: TextStyle(color: AppTheme.textDim, fontSize: 13),
         ),
       ),
