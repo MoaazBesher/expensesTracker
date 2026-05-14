@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:home_widget/home_widget.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 import 'screens/home_screen.dart';
 import 'screens/transactions_screen.dart';
@@ -16,6 +17,7 @@ import 'services/firebase_service.dart';
 import 'services/native_pending_sync.dart';
 import 'services/storage_service.dart';
 import 'services/widget_service.dart';
+import 'services/version_check_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'utils/app_theme.dart';
 import 'utils/screen_utils.dart';
@@ -349,6 +351,7 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _initConnectivity();
+    _checkForUpdates();
     FirebaseService().ensureDefaultAccountExists();
     WidgetService.registerInteractivity();
     _handleInitialDeepLink();
@@ -643,6 +646,102 @@ class _MainNavigationState extends State<MainNavigation> with WidgetsBindingObse
   void _triggerAction(VoidCallback action) {
     // Wait a bit for the tab to switch and the state to be ready
     Future.delayed(const Duration(milliseconds: 500), action);
+  }
+
+  void _checkForUpdates() {
+    VersionCheckService.checkForUpdates().then((updateInfo) {
+      if (updateInfo != null && mounted) {
+        _showUpdateDialog(updateInfo);
+      }
+    });
+  }
+
+  void _showUpdateDialog(VersionInfo updateInfo) {
+    showDialog(
+      context: context,
+      barrierDismissible: !updateInfo.forceUpdate,
+      builder: (ctx) => WillPopScope(
+        onWillPop: () async => !updateInfo.forceUpdate,
+        child: AlertDialog(
+          backgroundColor: AppTheme.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          icon: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppTheme.income.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppTheme.income.withValues(alpha: 0.3)),
+            ),
+            child: const Icon(Icons.system_update_rounded, color: AppTheme.income, size: 28),
+          ),
+          title: Text(
+            'Update Available',
+            style: const TextStyle(color: AppTheme.textMain, fontSize: 18, fontWeight: FontWeight.w700),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Text(
+                'Version ${updateInfo.version}',
+                style: const TextStyle(color: AppTheme.textDim, fontSize: 13),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.background,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.border),
+                ),
+                child: Text(
+                  updateInfo.releaseNotes.isEmpty ? 'Download the latest version!' : updateInfo.releaseNotes,
+                  style: const TextStyle(color: AppTheme.textMain, fontSize: 12, height: 1.5),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            if (!updateInfo.forceUpdate)
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: TextButton.styleFrom(foregroundColor: AppTheme.textDim),
+                child: const Text('Later'),
+              ),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  // Open download URL
+                  try {
+                    if (await canLaunchUrl(Uri.parse(updateInfo.downloadUrl))) {
+                      await launchUrl(Uri.parse(updateInfo.downloadUrl), mode: LaunchMode.externalApplication);
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Could not open link: $e'),
+                          backgroundColor: AppTheme.accent,
+                        ),
+                      );
+                    }
+                  }
+                },
+                icon: const Icon(Icons.download_rounded, size: 18),
+                label: const Text('Download'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.income,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _initConnectivity() {
