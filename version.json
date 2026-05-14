@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.2.0",
   "buildNumber": 1,
   "downloadUrl": "https://raw.githubusercontent.com/MoaazBesher/expensesTracker/main/releases/expenses-tracker-v1.0.tar.gz",
   "releaseNotes": "🎯 Initial Release - Full featured expense tracking with offline support",
