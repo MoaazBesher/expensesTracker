@@ -87,6 +87,16 @@ Native Layer (Kotlin Widgets, Quick Add, Deep Links)
 - `WidgetService` pushes data to native Android home screen widgets through SharedPreferences.
 - Native Kotlin files handle widget rendering, the quick-add dialog, and deep-link navigation.
 
+## Quick Download
+
+### 📱 Download APK (Direct Link)
+
+**[⬇️ Download Expenses Tracker v1.0 (Compressed)](https://raw.githubusercontent.com/MoaazBesher/expensesTracker/main/releases/expenses-tracker-v1.0.tar.gz)** (82 MB)
+
+Extract the archive and install the APK on your Android device!
+
+---
+
 ## Getting Started
 
 ### Prerequisites
