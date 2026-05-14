@@ -162,7 +162,12 @@ lib/
 
 ## Screenshots
 
-<!-- Add screenshots here when available -->
+| | | |
+|---|---|---|
+| Dashboard | Accounts | Transactions |
+| ![Dashboard](screenshots/dashboard.png) | ![Accounts](screenshots/accounts.png) | ![Transactions](screenshots/transactions.png) |
+| Reminders | Debts | Login |
+| ![Reminders](screenshots/reminders.png) | ![Debts](screenshots/debts.png) | ![Login](screenshots/login.png) |
 
 ## License
 
